@@ -144,28 +144,42 @@ The AI will call the `wrongmath.read_math_file` tool and return the content in M
 ## Project Structure
 
 ```
-wrongmath-mcp/
-├── src/
-│   ├── __init__.py
+wrongmathf4/
+├── src/                       # MCP server
 │   ├── server.py              # MCP server main entry
 │   ├── services/
 │   │   ├── __init__.py
-│   │   ├── ocr_service.py     # OCR service wrapper (includes save to markdown)
+│   │   ├── ocr_service.py     # OCR service wrapper
 │   │   └── file_processor.py  # File processing (PDF/images)
 │   └── utils/
 │       ├── __init__.py
 │       ├── logger.py          # Logging utilities
-│       └── validators.py       # Input validation
+│       └── validators.py      # Input validation
+├── web.py                     # FastAPI backend (port 8000)
+├── frontend/                  # Next.js frontend
+│   ├── app/
+│   │   ├── globals.css        # Global styles (Tailwind)
+│   │   ├── layout.js          # Root layout
+│   │   └── page.js            # Main page
+│   ├── components/
+│   │   ├── FileUpload.jsx     # File upload (drag & drop)
+│   │   ├── OCRControl.jsx     # OCR settings panel
+│   │   ├── ResultPreview.jsx  # Result preview
+│   │   └── HistoryList.jsx    # History list
+│   ├── package.json
+│   ├── next.config.js
+│   ├── tailwind.config.js
+│   ├── uploads/               # Temporary uploads
+│   └── output/                # Frontend output
 ├── tests/
 │   ├── test_ocr_service.py
 │   ├── test_file_processor.py
 │   ├── test_validators.py
 │   ├── test_server.py
 │   └── fixtures/
-│       └── test_math.jpg
 ├── docs/                      # Test PDF files
 │   └── 豆包爱学-错题组卷-20260110_1.pdf
-├── output/                    # Generated markdown files (auto-created)
+├── output/                    # Generated markdown files
 │   └── 豆包爱学-错题组卷-20260110_1.md
 ├── requirements.txt
 ├── skills.json
@@ -341,7 +355,15 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | python3 src/server.
 - **OCR Provider**: SiliconFlow (DeepSeek-OCR, OCR-specialized model)
 - **Supported Formats**: pdf, jpg, jpeg, png
 - **Output Formats**: markdown, latex
-- **Features**: Math formula recognition, geometry description, PDF multi-page, function expressions, multi-column layouts, auto-save to output folder
+- **Features**: 
+  - Math formula recognition (LaTeX format)
+  - Geometry description
+  - PDF multi-page processing
+  - Function expressions
+  - Multi-column layouts
+  - Auto-save to output folder
+  - Auto-clean question number prefixes
+  - **Web UI**: Next.js frontend available (port 3000)
 
 ## Monitoring
 
@@ -356,11 +378,12 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | python3 src/server.
 
 ## Future Iterations
 
-- [ ] Batch file processing
-- [ ] Image preprocessing enhancement
-- [ ] Custom output templates
-- [ ] Recognition history
+- [x] Batch file processing
+- [x] Image preprocessing enhancement
+- [x] Custom output templates
+- [x] Recognition history
 - [ ] Support for other OCR providers
+- [ ] Deploy to production
 
 ## Output Folder
 

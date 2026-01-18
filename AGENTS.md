@@ -1,4 +1,30 @@
-# AGENTS.md - WrongMath MCP Server
+# AGENTS.md - WrongMath
+
+## Project Overview
+
+**WrongMath** is a math OCR tool that converts math problem images/PDFs to Markdown + LaTeX format.
+
+- **Repository**: https://github.com/guraul/wrongmathf4
+- **Tech Stack**: Python (MCP + FastAPI) + Next.js (Frontend)
+- **OCR Provider**: SiliconFlow (DeepSeek-OCR)
+
+---
+
+## Usage Modes
+
+### Mode 1: Web UI (Recommended)
+```
+Frontend: http://localhost:3000 (Next.js)
+Backend:  http://localhost:8000 (FastAPI)
+```
+
+### Mode 2: MCP Server (OpenCode Integration)
+```
+MCP Tool: wrongmath.read_math_file
+MCP Tool: wrongmath.recognize_image
+```
+
+---
 
 ## Build / Test / Run Commands
 
@@ -38,6 +64,24 @@ pytest tests/test_ocr_service.py::TestOCRService::test_recognize_text_success -v
 ### Deployment Script
 ```bash
 ./deploy.sh  # Checks environment, installs dependencies, validates setup
+```
+
+### Run Web UI (Recommended)
+
+**Start Backend:**
+```bash
+cd /Users/gubin/project/wrongmathf4
+source venv/bin/activate
+python3 web.py
+# Runs on http://localhost:8000
+```
+
+**Start Frontend:**
+```bash
+cd /Users/gubin/project/wrongmathf4/frontend
+npm install  # First time only
+npm run dev
+# Runs on http://localhost:3000
 ```
 
 ## Code Style Guidelines

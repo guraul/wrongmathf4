@@ -489,13 +489,14 @@
 
   "quickStart": {
     "steps": [
-      "克隆项目: git clone https://github.com/your-repo/wrongmath-mcp.git",
-      "安装依赖: pip install -r requirements.txt",
+      "克隆项目: git clone https://github.com/guraul/wrongmathf4.git",
+      "安装后端依赖: pip install -r requirements.txt",
+      "安装前端依赖: cd frontend && npm install",
       "配置 API Key: export SILICONFLOW_API_KEY=sk-xxx",
-      "复制 openCodeConfig.config 到 OpenCode settings.json",
-      "修改路径和 API Key",
-      "重启 OpenCode",
-      "开始使用: 请读取 /Users/gubin/project/wrongmathf4/docs/豆包爱学-错题组卷-20260110_1.pdf",
+      "启动后端: python3 web.py (端口 8000)",
+      "启动前端: cd frontend && npm run dev (端口 3000)",
+      "MCP 模式: 复制 openCodeConfig.config 到 OpenCode settings.json",
+      "开始使用: 访问 http://localhost:3000 或在 OpenCode 中使用 MCP 工具",
       "查看输出: output/豆包爱学-错题组卷-20260110_1.md"
     ]
   }

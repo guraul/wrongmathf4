@@ -224,3 +224,13 @@ test_output/
 
 # Output files
 output/
+
+# Frontend Next.js
+.next/
+frontend/.next/
+frontend/node_modules/
+frontend/package-lock.json
+frontend/.env*
+!frontend/.env.example
+frontend/output/
+frontend/uploads/
