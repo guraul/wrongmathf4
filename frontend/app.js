@@ -10,23 +10,6 @@ let uploadedFiles = [];
 let currentResult = null;
 let historyResults = [];
 
-// DOM 元素
-const dropZone = document.getElementById('drop-zone');
-const fileInput = document.getElementById('file-input');
-const fileListSection = document.getElementById('file-list-section');
-const fileList = document.getElementById('file-list');
-const recognizeBtn = document.getElementById('recognize-btn');
-const progressSection = document.getElementById('progress-section');
-const progressFill = document.getElementById('progress-fill');
-const progressText = document.getElementById('progress-text');
-const resultSection = document.getElementById('result-section');
-const resultPreview = document.getElementById('result-preview');
-const resultStats = document.getElementById('result-stats');
-const copyBtn = document.getElementById('copy-btn');
-const saveBtn = document.getElementById('save-btn');
-const clearBtn = document.getElementById('clear-btn');
-const historyList = document.getElementById('history-list');
-
 // ============ 初始化 ============
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -37,20 +20,41 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============ 事件监听 ============
 
 function initEventListeners() {
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const recognizeBtn = document.getElementById('recognize-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    
+    if (!dropZone || !fileInput) {
+        console.error('DOM elements not found');
+        return;
+    }
+    
     // 拖拽上传
     dropZone.addEventListener('dragover', handleDragOver);
     dropZone.addEventListener('dragleave', handleDragLeave);
     dropZone.addEventListener('drop', handleDrop);
-    dropZone.addEventListener('click', () => fileInput.click());
+    
+    // 直接点击 dropZone 触发文件选择
+    dropZone.addEventListener('click', (e) => {
+        // 防止触发拖拽区域的点击
+        e.preventDefault();
+        e.stopPropagation();
+        fileInput.click();
+    });
     
     // 文件选择
     fileInput.addEventListener('change', handleFileSelect);
     
     // 按钮事件
-    recognizeBtn.addEventListener('click', startRecognition);
-    copyBtn.addEventListener('click', copyResult);
-    saveBtn.addEventListener('click', saveResult);
-    clearBtn.addEventListener('click', clearResult);
+    if (recognizeBtn) recognizeBtn.addEventListener('click', startRecognition);
+    if (copyBtn) copyBtn.addEventListener('click', copyResult);
+    if (saveBtn) saveBtn.addEventListener('click', saveResult);
+    if (clearBtn) clearBtn.addEventListener('click', clearResult);
+    
+    console.log('Event listeners initialized');
 }
 
 // ============ 拖拽处理 ============
