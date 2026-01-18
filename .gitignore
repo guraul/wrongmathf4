@@ -1,0 +1,42 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# API Keys
+*.key
+*.pem
+*.crt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Frontend
+node_modules/
+*.log
+npm-debug.log*
+
+# Output
+output/*.md
+!output/.gitkeep
+
+# Test
+.coverage
+htmlcov/
+.pytest_cache/
