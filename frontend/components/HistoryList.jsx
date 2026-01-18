@@ -18,7 +18,9 @@ export default function HistoryList({ history, onLoadItem }) {
           className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-purple-50 transition-colors"
         >
           <div>
-            <p className="font-medium text-gray-700">{item.filename || item.file_path?.split('/').pop()}</p>
+            <p className="font-medium text-gray-700">
+              {item.filename || (item.file_path ? item.file_path.split('/').pop() : '未知文件')}
+            </p>
             <p className="text-sm text-gray-400">{item.time}</p>
           </div>
           <div className="text-sm text-gray-400">

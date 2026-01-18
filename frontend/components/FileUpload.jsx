@@ -1,38 +1,34 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useCallback, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
+import logger from '../utils/logger';
 
 export default function FileUpload({ onFilesAdded, uploadedFiles, onRemoveFile }) {
-  const [isDragOver, setIsDragOver] = useState(false);
-  const fileInputRef = useRef(null);
+  const onDrop = useCallback((acceptedFiles) => {
+    logger.info('Files dropped', { count: acceptedFiles.length });
+    acceptedFiles.forEach((f, i) => {
+      logger.debug(`File ${i}`, { 
+        name: f?.name, 
+        size: f?.size, 
+        type: f?.type,
+        constructor: f?.constructor?.name,
+        isFile: f instanceof File,
+        isBlob: f instanceof Blob
+      });
+    });
+    onFilesAdded(acceptedFiles);
+  }, [onFilesAdded]);
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragOver(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    onFilesAdded(files);
-  };
-
-  const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-    onFilesAdded(files);
-    e.target.value = '';
-  };
-
-  const handleClick = () => {
-    fileInputRef.current?.click();
-  };
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'application/pdf': ['.pdf']
+    },
+    multiple: true
+  });
 
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + ' B';
@@ -41,6 +37,7 @@ export default function FileUpload({ onFilesAdded, uploadedFiles, onRemoveFile }
   };
 
   const getFileIcon = (filename) => {
+    if (!filename || !filename.includes('.')) return '📁';
     const ext = filename.split('.').pop().toLowerCase();
     if (ext === 'pdf') return '📄';
     if (['jpg', 'jpeg', 'png'].includes(ext)) return '🖼️';
@@ -55,23 +52,16 @@ export default function FileUpload({ onFilesAdded, uploadedFiles, onRemoveFile }
       
       {/* Drop Zone */}
       <div
-        className={`drop-zone ${isDragOver ? 'drag-over' : ''}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={handleClick}
+        {...getRootProps()}
+        className={`drop-zone ${isDragActive ? 'drag-over' : ''}`}
       >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
-          multiple
-          onChange={handleFileSelect}
-          className="hidden"
-        />
+        <input {...getInputProps()} />
         <div className="text-6xl mb-4">📁</div>
         <p className="text-lg text-gray-600">
-          拖拽文件到此处，或 <span className="text-purple-500 underline">点击选择</span>
+          {isDragActive 
+            ? '释放文件...' 
+            : <>拖拽文件到此处，或 <span className="text-purple-500 underline">点击选择</span></>
+          }
         </p>
         <p className="text-sm text-gray-400 mt-2">
           支持 PDF、JPG、PNG（最大 10MB）
@@ -86,19 +76,22 @@ export default function FileUpload({ onFilesAdded, uploadedFiles, onRemoveFile }
           </h3>
           <div className="space-y-2">
             {uploadedFiles.map((file) => (
-              <div 
-                key={file.id}
+              <div
+                key={file.id || file.file.path || file.name}
                 className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
               >
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{getFileIcon(file.name)}</span>
                   <div>
                     <p className="font-medium text-gray-700">{file.name}</p>
-                    <p className="text-sm text-gray-400">{formatFileSize(file.size)}</p>
+                    <p className="text-sm text-gray-400">{formatFileSize(file.file.size)}</p>
                   </div>
                 </div>
                 <button
-                  onClick={() => onRemoveFile(file.id)}
+                  onClick={() => {
+                    logger.info('File removed', { name: file.name });
+                    onRemoveFile(file.id);
+                  }}
                   className="text-gray-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors"
                 >
                   ✕

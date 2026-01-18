@@ -1,51 +1,66 @@
-# Environment
+# Environment & Secrets
 .env
 .env.local
 .env.*.local
 .env.backup
 settings.json
-
-# API Keys
 *.key
 *.pem
 *.crt
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
 # Python
-venv/
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+*.pyd
+*.so
 *.egg-info/
 dist/
 build/
+venv/
+.venv/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Logs
+*.log
+mcp_server.log
 
 # Frontend (Next.js)
 frontend/node_modules/
 frontend/.next/
 frontend/out/
 frontend/build/
-*.log
-npm-debug.log*
-yarn-error.log*
 frontend/package-lock.json
+frontend/.env*
+!frontend/.env.example
 
-# Output
+# Output & Uploads
 output/*.md
 !output/.gitkeep
 frontend/uploads/
 frontend/output/
+logs/
 
-# Test
-.coverage
-htmlcov/
-.pytest_cache/
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary
+*.tmp
+*.bak
+tmp/
+temp/

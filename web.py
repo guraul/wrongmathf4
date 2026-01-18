@@ -8,14 +8,16 @@ import uuid
 import base64
 import asyncio
 import re
+import logging
 from pathlib import Path
 from typing import Optional, List
 from datetime import datetime
+from logging.handlers import RotatingFileHandler
+from pydantic import BaseModel
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
-from pydantic import BaseModel
 from dotenv import load_dotenv
 
 # 加载环境变量
@@ -30,9 +32,39 @@ sys.path.insert(0, str(SRC_DIR))
 
 from services.file_processor import process_file, pdf_to_image_files
 from services.ocr_service import create_ocr_service
-from utils.logger import setup_logger
 
-logger = setup_logger("webapi")
+# ============ 日志配置 ============
+
+LOG_DIR = PROJECT_ROOT / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+# 简单的文件日志函数
+def log_to_file(level: str, message: str, data: Optional[dict] = None):
+    """写入日志到文件"""
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    log_line = f"[{timestamp}] [{level}] {message}"
+    if data:
+        log_line += f" | {data}"
+    log_line += "\n"
+    
+    log_file = LOG_DIR / "wrongmath.log"
+    try:
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(log_line)
+    except Exception:
+        pass  # 静默失败，避免日志写入失败影响主程序
+
+def log_info(message: str, data: Optional[dict] = None):
+    print(f"[INFO] {message}")
+    log_to_file("INFO", message, data)
+
+def log_error(message: str, data: Optional[dict] = None):
+    print(f"[ERROR] {message}")
+    log_to_file("ERROR", message, data)
+
+def log_debug(message: str, data: Optional[dict] = None):
+    print(f"[DEBUG] {message}")
+    log_to_file("DEBUG", message, data)
 
 app = FastAPI(
     title="WrongMath OCR API",
@@ -48,6 +80,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 添加请求日志中间件
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    log_debug(f"Request: {request.method} {request.url}", {
+        "headers": dict(request.headers),
+        "query_params": dict(request.query_params)
+    })
+    response = await call_next(request)
+    log_debug(f"Response: {response.status_code}")
+    return response
 
 # 上传文件存储目录
 UPLOAD_DIR = PROJECT_ROOT / "frontend" / "uploads"
@@ -77,6 +120,7 @@ class SaveRequest(BaseModel):
     """保存请求"""
     content: str
     filename: str
+
 
 # ============ 辅助函数 ============
 
@@ -119,32 +163,61 @@ async def root():
 
 
 @app.post("/api/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(request: Request):
     """
     上传文件
     
-    支持 PDF、JPG、PNG 格式
-    返回临时文件路径供后续 OCR 使用
+    支持两种方式：
+    1. multipart/form-data (常规方式) - field name: file
+    2. 原始二进制 + X-File-Name header (Safari 兼容)
     """
     try:
+        content_type = request.headers.get('Content-Type', '')
+        
         # 生成唯一文件名
         file_id = str(uuid.uuid4())[:8]
-        original_name = file.filename
+        
+        # 从 header 获取文件名（Safari 上传方式）
+        header_filename = request.headers.get('X-File-Name')
+        
+        # 读取原始 body
+        content = await request.body()
+        
+        # 检查是否是 multipart
+        if 'multipart/form-data' in content_type and not header_filename:
+            # 使用临时解析 - 简化的方式
+            # 实际应该使用 UploadFile，但这里我们用 filename 参数
+            return {"message": "Use multipart with 'file' field"}
+        
+        if header_filename:
+            # Safari 原始二进制上传
+            original_name = header_filename
+        else:
+            # 没有文件名，尝试从 Content-Disposition 获取
+            content_disposition = request.headers.get('Content-Disposition', '')
+            if 'filename=' in content_disposition:
+                import re
+                match = re.search(r'filename="?([^";\n]+)"?', content_disposition)
+                original_name = match.group(1) if match else f'file_{file_id}'
+            else:
+                original_name = f'file_{file_id}'
+        
         ext = Path(original_name).suffix.lower()
+        log_info(f"上传文件: {original_name}, 扩展名: {ext}, 大小: {len(content)} 字节")
         
         # 验证文件类型
         if ext not in {".pdf", ".jpg", ".jpeg", ".png"}:
-            raise HTTPException(status_code=400, detail="不支持的文件格式")
+            log_error(f"不支持的文件格式: {ext}")
+            raise HTTPException(status_code=400, detail=f"不支持的文件格式: {ext}")
         
         # 保存文件
         filename = f"{file_id}_{original_name}"
         file_path = UPLOAD_DIR / filename
         
-        content = await file.read()
         with open(file_path, "wb") as f:
             f.write(content)
         
-        logger.info(f"文件上传成功: {file_path}")
+        log_info(f"文件上传成功: {file_path}")
         
         return {
             "success": True,
@@ -155,7 +228,7 @@ async def upload_file(file: UploadFile = File(...)):
         }
         
     except Exception as e:
-        logger.error(f"文件上传失败: {e}")
+        log_error(f"文件上传失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -171,7 +244,7 @@ async def recognize_file(request: OCRRequest):
             raise HTTPException(status_code=400, detail="文件不存在")
         
         file_path = request.file_path
-        logger.info(f"开始 OCR 识别: {file_path}")
+        log_info(f"开始 OCR 识别: {file_path}")
         
         # 处理文件（PDF 转图片，或直接使用图片）
         base64_images, num_pages = process_file(file_path)
@@ -197,7 +270,7 @@ async def recognize_file(request: OCRRequest):
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(recognized_text)
         
-        logger.info(f"OCR 完成: {num_pages} 页, {len(recognized_text)} 字符")
+        log_info(f"OCR 完成: {num_pages} 页, {len(recognized_text)} 字符")
         
         return {
             "success": True,
@@ -211,7 +284,7 @@ async def recognize_file(request: OCRRequest):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"OCR 识别失败: {e}")
+        log_error(f"OCR 识别失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -233,7 +306,7 @@ async def save_result(request: SaveRequest):
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(request.content)
         
-        logger.info(f"结果已保存: {output_path}")
+        log_info(f"结果已保存: {output_path}")
         
         return {
             "success": True,
@@ -242,7 +315,7 @@ async def save_result(request: SaveRequest):
         }
         
     except Exception as e:
-        logger.error(f"保存失败: {e}")
+        log_error(f"保存失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -268,13 +341,22 @@ async def list_outputs():
     """
     列出所有输出文件
     """
+    log_info("Listing outputs")
     outputs = []
     for f in RESULTS_DIR.glob("*.md"):
+        # 读取文件内容计算字符数
+        try:
+            with open(f, "r", encoding="utf-8") as file:
+                content = file.read()
+                characters = len(content)
+        except Exception:
+            characters = 0
+        
         outputs.append({
             "filename": f.name,
-            "path": str(f),
-            "size": f.stat().st_size,
-            "modified": datetime.fromtimestamp(f.stat().st_mtime).isoformat()
+            "file_path": str(f),
+            "time": datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
+            "characters": characters
         })
     
     return {
@@ -296,6 +378,64 @@ async def delete_uploaded_file(file_id: str):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class FrontendLogRequest(BaseModel):
+    """前端日志请求"""
+    level: str
+    message: str
+    data: Optional[dict] = None
+    sessionId: str
+    timestamp: str
+    userAgent: Optional[str] = None
+
+
+@app.post("/api/logs")
+async def receive_frontend_log(request: FrontendLogRequest):
+    """
+    接收前端日志并写入文件
+    """
+    try:
+        log_line = (
+            f"[{request.timestamp}] [{request.level.upper()}] [frontend:{request.sessionId}] "
+            f"{request.message}"
+        )
+        if request.data:
+            log_line += f"\n  Data: {request.data}"
+        if request.userAgent:
+            log_line += f"\n  UserAgent: {request.userAgent[:100]}"
+        log_line += "\n"
+        
+        # 写入前端日志文件
+        frontend_log_file = LOG_DIR / "frontend.log"
+        with open(frontend_log_file, "a", encoding="utf-8") as f:
+            f.write(log_line)
+        
+        return {"success": True}
+        
+    except Exception as e:
+        log_error(f"Failed to write frontend log: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/logs")
+async def list_logs():
+    """
+    列出日志文件
+    """
+    logs = []
+    for f in LOG_DIR.glob("*.log"):
+        logs.append({
+            "name": f.name,
+            "path": str(f),
+            "size": f.stat().st_size,
+            "modified": datetime.fromtimestamp(f.stat().st_mtime).isoformat()
+        })
+    
+    return {
+        "success": True,
+        "logs": logs
+    }
 
 
 if __name__ == "__main__":
