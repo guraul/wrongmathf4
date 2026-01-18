@@ -19,13 +19,15 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 # 加载环境变量
-load_dotenv("../.env")
+load_dotenv(".env")
+
+# 项目根目录
+PROJECT_ROOT = Path(__file__).parent
 
 # 添加 src 目录到路径
-SRC_DIR = Path(__file__).parent.parent / "src"
+SRC_DIR = PROJECT_ROOT / "src"
 sys.path.insert(0, str(SRC_DIR))
 
-# 使用绝对导入
 from services.file_processor import process_file, pdf_to_image_files
 from services.ocr_service import create_ocr_service
 from utils.logger import setup_logger
@@ -48,7 +50,6 @@ app.add_middleware(
 )
 
 # 上传文件存储目录
-PROJECT_ROOT = Path(__file__).parent.parent
 UPLOAD_DIR = PROJECT_ROOT / "frontend" / "uploads"
 OUTPUT_DIR = PROJECT_ROOT / "frontend" / "output"
 RESULTS_DIR = PROJECT_ROOT / "output"
