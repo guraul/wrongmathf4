@@ -1,0 +1,15 @@
+# Placeholder for Simple Algebra Problem
+# This would be a JPG image showing a simple algebra problem like:
+# "Solve the equation: x^2 + 5x + 6 = 0"
+#
+# Expected OCR output:
+# ## 题目
+# 解方程：$x^2 + 5x + 6 = 0$
+#
+# ### 解
+# 二次方程求根公式：$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$
+# 
+# 代入 $a = 1, b = 5, c = 6$：
+# $$x = \frac{-5 \pm \sqrt{25 - 24}}{2} = \frac{-5 \pm 1}{2}$$
+# 
+# 所以：$x_1 = -2, x_2 = -3$

@@ -1,0 +1,21 @@
+# Placeholder for Functions Problem
+# This would be a JPG image showing a function analysis problem
+#
+# Expected OCR output:
+# ## 题目
+# 已知函数 $f(x) = x^2 - 4x + 3$，求：
+# 1. 函数的零点
+# 2. 函数的对称轴
+# 3. 函数的最小值
+#
+# ### 解
+# 1. 求零点：
+# $$x^2 - 4x + 3 = 0$$
+# $$(x-1)(x-3) = 0$$
+# 所以零点为 $x = 1$ 和 $x = 3$
+#
+# 2. 对称轴：
+# $$x = -\frac{b}{2a} = \frac{4}{2} = 2$$
+#
+# 3. 最小值：
+# 当 $x = 2$ 时，$f(2) = 2^2 - 4 \times 2 + 3 = -1$

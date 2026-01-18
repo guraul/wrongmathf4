@@ -1,0 +1,16 @@
+# Placeholder for Calculus Problem
+# This would be a JPG image showing a calculus problem like:
+# "Find the derivative of f(x) = x^3 - 2x^2 + 5x - 3"
+#
+# Expected OCR output:
+# ## 题目
+# 求导：$f(x) = x^3 - 2x^2 + 5x - 3$
+#
+# ### 解
+# 使用求导法则：
+# $$\frac{d}{dx}(x^3) = 3x^2$$
+# $$\frac{d}{dx}(-2x^2) = -4x$$
+# $$\frac{d}{dx}(5x) = 5$$
+# $$\frac{d}{dx}(-3) = 0$$
+# 
+# 所以：$$f'(x) = 3x^2 - 4x + 5$$

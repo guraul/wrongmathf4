@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WrongMath - 数学题目 OCR</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 标题 -->
+        <header>
+            <h1>📐 WrongMath</h1>
+            <p>数学题目 OCR 识别工具</p>
+        </header>
+
+        <!-- 上传区域 -->
+        <section class="upload-section">
+            <div id="drop-zone" class="drop-zone">
+                <div class="drop-zone-content">
+                    <span class="upload-icon">📁</span>
+                    <p>拖拽文件到此处，或 <label for="file-input">点击选择</label></p>
+                    <p class="hint">支持 PDF、JPG、PNG（最大 10MB）</p>
+                </div>
+                <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple hidden>
+            </div>
+        </section>
+
+        <!-- 文件列表 -->
+        <section id="file-list-section" class="file-list-section hidden">
+            <h2>待识别文件</h2>
+            <div id="file-list" class="file-list"></div>
+        </section>
+
+        <!-- OCR 控制面板 -->
+        <section class="control-section">
+            <h2>OCR 设置</h2>
+            <div class="control-grid">
+                <div class="control-item">
+                    <label>
+                        <input type="checkbox" id="clean-numbers" checked>
+                        自动清除题号前缀
+                    </label>
+                </div>
+                <div class="control-item">
+                    <label for="zoom">图片缩放:</label>
+                    <select id="zoom">
+                        <option value="0.5">0.5x (速度快)</option>
+                        <option value="1.0" selected>1.0x (平衡)</option>
+                        <option value="1.5">1.5x (质量高)</option>
+                        <option value="2.0">2.0x (最高质量)</option>
+                    </select>
+                </div>
+            </div>
+            <button id="recognize-btn" class="btn btn-primary">
+                开始识别
+            </button>
+        </section>
+
+        <!-- 进度显示 -->
+        <section id="progress-section" class="progress-section hidden">
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <p id="progress-text">处理中...</p>
+        </section>
+
+        <!-- 结果预览 -->
+        <section id="result-section" class="result-section hidden">
+            <div class="result-header">
+                <h2>识别结果</h2>
+                <div class="result-actions">
+                    <button id="copy-btn" class="btn btn-secondary">复制内容</button>
+                    <button id="save-btn" class="btn btn-secondary">保存文件</button>
+                    <button id="clear-btn" class="btn btn-outline">清除结果</button>
+                </div>
+            </div>
+            <div id="result-preview" class="result-preview"></div>
+            <div id="result-stats" class="result-stats"></div>
+        </section>
+
+        <!-- 历史记录 -->
+        <section class="history-section">
+            <h2>历史记录</h2>
+            <div id="history-list" class="history-list"></div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

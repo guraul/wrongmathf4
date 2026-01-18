@@ -1,0 +1,18 @@
+{
+  "mcp": {
+    "wrongmath": {
+      "type": "local",
+      "command": [
+        "python3",
+        "/Users/gubin/project/wrongmathf4/src/server.py"
+      ],
+      "enabled": true,
+      "environment": {
+        "SILICONFLOW_API_KEY": "sk-pndfmmqmaqqrezvzwendvkegtdrpspydabkzvbwwfkcuxsli",
+        "DEEPSEEK_OCR_MODEL": "deepseek-ai/DeepSeek-OCR",
+        "SILICONFLOW_BASE_URL": "https://api.siliconflow.cn/v1",
+        "LOG_LEVEL": "INFO"
+      }
+    }
+  }
+}

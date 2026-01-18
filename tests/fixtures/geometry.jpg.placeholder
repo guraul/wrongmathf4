@@ -1,0 +1,13 @@
+# Placeholder for Geometry Problem
+# This would be a JPG image showing a geometry problem involving triangles or circles
+#
+# Expected OCR output:
+# ## 题目
+# 已知三角形 ABC，AB = 5cm，BC = 7cm，AC = 8cm，求该三角形的面积。
+#
+# ### 解
+# 使用海伦公式求三角形面积：
+# $$s = \frac{a + b + c}{2} = \frac{5 + 7 + 8}{2} = 10$$
+# 
+# $$面积 = \sqrt{s(s-a)(s-b)(s-c)} = \sqrt{10(10-5)(10-7)(10-8)}$$
+# $$= \sqrt{10 \times 5 \times 3 \times 2} = \sqrt{300} = 10\sqrt{3} \text{ cm}^2$$

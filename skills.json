@@ -1,0 +1,502 @@
+{
+  "name": "wrongmath-mcp",
+  "version": "1.0.0",
+  "displayName": "WrongMath 数学错题 OCR",
+  "description": "纯本地 Python MCP 服务器，使用 DeepSeek-OCR 识别数学错题，支持 PDF/图片转 Markdown + LaTeX",
+  "author": "Gubin",
+  "category": "Local Tools",
+  "tags": ["ocr", "math", "mcp", "deepseek", "latex"],
+  
+  "tools": [
+    {
+      "name": "read_math_file",
+      "description": "读取本地数学题目文件（PDF/图片），利用 DeepSeek-OCR 转换为 Markdown + LaTeX 格式。支持识别复杂公式、几何图形和函数表达式。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "本地文件的绝对路径 (例如: /Users/gubin/Desktop/test.pdf)"
+          }
+        },
+        "required": ["file_path"]
+      }
+    },
+    {
+      "name": "recognize_image",
+      "description": "识别图片中的数学公式和文字，自动清除题号前缀，保存为 Markdown 文件。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "image_path": {
+            "type": "string",
+            "description": "图片文件的绝对路径 (例如: /Users/gubin/Desktop/math.png)"
+          },
+          "output_path": {
+            "type": "string",
+            "description": "可选，输出 Markdown 文件的绝对路径。默认保存为 {image_path}.md"
+          }
+        },
+        "required": ["image_path"]
+      }
+    }
+  ],
+
+  "openCodeConfig": {
+    "_comment": "请复制下方的 'mcp' 块内容到 OpenCode 的配置文件中",
+    "_instruction": "OpenCode 配置文件位置通常在: ~/Library/Application Support/OpenCode/User/settings.json (具体请以 OpenCode 实际文档为准)",
+    "config": {
+      "mcp": {
+        "wrongmath": {
+          "type": "local",
+          "command": [
+            "python3",
+            "/Users/gubin/project/wrongmathf4/src/server.py"
+          ],
+          "enabled": true,
+            "environment": {
+            "SILICONFLOW_API_KEY": "sk-your-actual-api-key-here",
+            "DEEPSEEK_OCR_MODEL": "deepseek-ai/DeepSeek-OCR",
+            "SILICONFLOW_BASE_URL": "https://api.siliconflow.cn/v1",
+            "LOG_LEVEL": "INFO"
+          }
+        }
+      }
+    }
+  },
+
+  "implementationPlan": {
+    "phase1": "核心代码编写",
+    "fileStructure": [
+      "src/__init__.py",
+      "src/server.py (MCP 服务器主入口)",
+      "src/services/__init__.py",
+      "src/services/ocr_service.py (OCR 服务封装)",
+      "src/services/file_processor.py (文件处理: PDF/图片)",
+      "src/utils/__init__.py",
+      "src/utils/logger.py (日志工具)",
+      "src/utils/validators.py (输入验证)"
+    ],
+    "dependencies": [
+      "mcp>=0.9.0",
+      "openai>=1.0.0",
+      "pymupdf>=1.23.0",
+      "Pillow>=10.0.0",
+      "python-dotenv",
+      "PyYAML"
+    ],
+    "serverLogic": {
+      "init": "实例化 Server('wrongmath')，从环境变量读取 API Key 和配置",
+      "toolRegistration": "定义 list_tools() 返回 read_math_file 和 recognize_image 工具",
+      "toolExecution": {
+        "steps": [
+          "参数校验（文件路径有效性）",
+          "文件类型判断（PDF/图片）",
+          "文件预处理（转 Base64）",
+          "调用 OCR API（SiliconFlow DeepSeek-OCR）",
+          "清洗题号前缀（recognize_image 工具）",
+          "返回 Markdown + LaTeX 结果"
+        ]
+      },
+      "errorHandling": {
+        "networkTimeout": "重试最多3次，每次间隔1秒",
+        "apiError": "返回友好错误信息，不崩溃",
+        "fileNotFound": "提示文件路径错误"
+      }
+    }
+  },
+
+  "testing": {
+    "testFramework": {
+      "primary": "pytest",
+      "dependencies": [
+        "pytest",
+        "pytest-asyncio",
+        "pytest-mock",
+        "pytest-cov"
+      ]
+    },
+    "unitTests": {
+      "description": "单元测试验证各个组件的正确性",
+      "testFiles": [
+        "tests/test_ocr_service.py (OCR 服务测试)",
+        "tests/test_file_processor.py (文件处理测试)",
+        "tests/test_validators.py (输入验证测试)"
+      ],
+      "testCases": {
+        "fileProcessor": [
+          "读取有效的 JPG 图片 - 应成功",
+          "读取不存在的文件 - 应抛出 FileNotFoundError",
+          "读取超大文件(>10MB) - 应抛出 FileSizeExceededError",
+          "读取不支持的文件类型 - 应抛出 UnsupportedFileTypeError",
+          "PDF 转图片(3页) - 应返回3个图片列表",
+          "Base64 转换 - 应返回有效 Base64 字符串"
+        ],
+        "ocrService": [
+          "模拟成功调用 OCR API - 应返回 Markdown 文本",
+          "模拟 API 超时 - 应重试3次后抛出 OCRTimeoutError",
+          "模拟 API 返回401错误 - 应抛出 AuthenticationError",
+          "模拟空响应 - 应抛出 EmptyResponseError",
+          "验证 Prompt 注入 - Prompt 应包含 Markdown 和 LaTeX"
+        ],
+        "validators": [
+          "有效的文件路径 - 应返回 True",
+          "相对路径 - 应返回 False",
+          "路径遍历攻击 - 应返回 False",
+          "有效的文件类型 - 应返回 True",
+          "无效的文件类型 - 应返回 False"
+        ]
+      },
+      "executionCommands": [
+        "cd /Users/gubin/projects/wrongmath-mcp",
+        "export SILICONFLOW_API_KEY=test-key",
+        "export LOG_LEVEL=DEBUG",
+        "pytest tests/ -v",
+        "pytest tests/ --cov=src --cov-report=html"
+      ],
+      "passCriteria": {
+        "allTestsPass": true,
+        "codeCoverage": ">= 80%",
+        "noWarnings": true,
+        "executionTime": "< 10秒"
+      }
+    },
+    "integrationTests": {
+      "description": "集成测试验证 MCP 服务器的功能",
+      "testFile": "tests/test_server.py",
+      "testScenarios": [
+        {
+          "name": "服务器启动测试",
+          "steps": [
+            "运行: python3 src/server.py",
+            "观察启动日志"
+          ],
+          "expectedResults": [
+            "服务器成功启动，无错误日志",
+            "输出: WrongMath MCP Server started",
+            "等待 stdio 输入"
+          ]
+        },
+        {
+          "name": "工具列表获取测试",
+          "steps": [
+            "通过 stdio 发送: {\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"tools/list\"}"
+          ],
+          "expectedResults": [
+            "返回工具列表",
+            "包含 read_math_file 工具",
+            "工具描述准确",
+            "参数 schema 正确"
+          ]
+        },
+        {
+          "name": "工具调用测试",
+          "steps": [
+            "准备测试图片 tests/fixtures/test_math.jpg",
+            "发送工具调用请求"
+          ],
+          "expectedResults": [
+            "成功识别图片",
+            "返回 Markdown 格式文本",
+            "包含 LaTeX 公式"
+          ]
+        },
+        {
+          "name": "错误处理测试",
+          "steps": [
+            "发送不存在的文件路径"
+          ],
+          "expectedResults": [
+            "返回错误信息",
+            "错误信息友好且明确",
+            "不导致服务器崩溃"
+          ]
+        }
+      ],
+      "executionCommands": [
+        "python3 src/server.py",
+        "echo '{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"tools/list\"}' | python3 src/server.py | jq",
+        "python3 tests/integration_test.py"
+      ]
+    },
+    "openCodeIntegrationTests": {
+      "description": "在 OpenCode 中测试 MCP 接入是否成功",
+      "testFiles": [
+        "~/Desktop/test_math/simple_algebra.jpg (简单代数题)",
+        "~/Desktop/test_math/calculus.jpg (复杂微积分题)",
+        "~/Desktop/test_math/math_exam.pdf (多页试卷)",
+        "~/Desktop/test_math/handwritten.jpg (手写体测试)"
+      ],
+      "testSteps": [
+        {
+          "step": 1,
+          "name": "验证 OpenCode 启动",
+          "instructions": [
+            "重启 OpenCode",
+            "打开开发者工具查看控制台日志"
+          ],
+          "expectedResults": [
+            "看到: MCP server 'wrongmath' connected",
+            "无 Python 启动错误",
+            "无连接超时错误"
+          ]
+        },
+        {
+          "step": 2,
+          "name": "验证工具发现",
+          "instructions": [
+            "在 OpenCode 对话中输入: 你有哪些可用的工具？"
+          ],
+          "expectedResults": [
+            "AI 回复包含 read_math_file 工具",
+            "工具描述与 skills.json 一致"
+          ]
+        },
+        {
+          "step": 3,
+          "name": "简单图片测试",
+          "instructions": [
+            "输入: 请读取 ~/Desktop/test_math/simple_algebra.jpg 的内容"
+          ],
+          "expectedResults": [
+            "OpenCode 调用 wrongmath.read_math_file",
+            "返回 Markdown 格式文本",
+            "包含 LaTeX 公式 (如 $x^2 + 2x + 1 = 0$)",
+            "无乱码"
+          ]
+        },
+        {
+          "step": 4,
+          "name": "复杂图片测试",
+          "instructions": [
+            "输入: 请识别 ~/Desktop/test_math/calculus.jpg 中的微积分题目"
+          ],
+          "expectedResults": [
+            "成功识别复杂的积分符号",
+            "积分上下限准确",
+            "函数表达式正确",
+            "输出格式美观"
+          ]
+        },
+        {
+          "step": 5,
+          "name": "PDF 多页测试",
+          "instructions": [
+            "输入: 读取 ~/Desktop/test_math/math_exam.pdf，列出所有题目"
+          ],
+          "expectedResults": [
+            "识别每一页的内容",
+            "按页分割输出",
+            "每页标题为 '第 1 页'、'第 2 页' 等",
+            "总处理时间 < 30 秒"
+          ]
+        },
+        {
+          "step": 6,
+          "name": "错误处理测试",
+          "testCases": [
+            {
+              "name": "文件不存在",
+              "input": "读取 ~/Desktop/nonexistent.pdf",
+              "expected": "AI 提示文件不存在，不会崩溃"
+            },
+            {
+              "name": "不支持的文件类型",
+              "input": "读取 ~/Desktop/test.txt",
+              "expected": "AI 提示不支持该格式"
+            },
+            {
+              "name": "手写体测试",
+              "input": "读取 ~/Desktop/test_math/handwritten.jpg",
+              "expected": "AI 尝试识别，但提示准确率可能较低"
+            }
+          ]
+        },
+        {
+          "step": 7,
+          "name": "性能测试",
+          "instructions": [
+            "准备大文件（接近 10MB）",
+            "在 OpenCode 中调用",
+            "记录处理时间"
+          ],
+          "expectedResults": [
+            "处理时间 < 60 秒",
+            "内存占用合理",
+            "不会超时"
+          ]
+        }
+      ],
+      "successIndicators": [
+        "OpenCode 控制台无报错",
+        "对话中显示工具调用日志",
+        "返回的文本包含 $$ 符号包裹的公式"
+      ],
+      "troubleshooting": {
+        "noResponse": "检查 Python 路径和 server.py 路径是否正确",
+        "apiKeyError": "检查 SILICONFLOW_API_KEY 是否有效",
+        "fileNotFound": "检查测试文件路径是否正确且存在",
+        "timeoutError": "检查网络连接或增加 OCR_TIMEOUT 值"
+      }
+    },
+    "e2eTests": {
+      "description": "端到端测试验证完整的用户体验",
+      "scenarios": [
+        {
+          "name": "场景1: 完整的错题整理流程",
+          "userStory": "我是学生，想要整理一张数学试卷中的错题",
+          "steps": [
+            "将试卷扫描成 PDF: ~/Desktop/exam.pdf",
+            "在 OpenCode 中说: 帮我整理 ~/Desktop/exam.pdf 中的错题",
+            "AI 调用 wrongmath 读取 PDF",
+            "AI 解析识别结果，提取题目",
+            "AI 将题目整理成结构化格式"
+          ],
+          "expectedResults": [
+            "成功读取 PDF",
+            "提取出所有题目",
+            "公式格式正确",
+            "可以直接复制到笔记软件"
+          ]
+        },
+        {
+          "name": "场景2: 错题解析和变式生成",
+          "userStory": "我是老师，想要根据错题生成变式练习",
+          "steps": [
+            "提供一张错题图片",
+            "AI 识别题目内容",
+            "AI 基于识别结果生成 3 道变式题"
+          ],
+          "expectedResults": [
+            "识别准确",
+            "变式合理",
+            "保持题型相似",
+            "公式正确"
+          ]
+        },
+        {
+          "name": "场景3: 多文件批量处理",
+          "userStory": "我要整理一学期的错题",
+          "steps": [
+            "准备 5 个 PDF 文件",
+            "在 OpenCode 中说: 依次读取这 5 个文件: [文件列表]",
+            "AI 逐个调用 wrongmath",
+            "AI 合并所有识别结果"
+          ],
+          "expectedResults": [
+            "所有文件都能识别",
+            "结果按文件分组",
+            "总耗时合理"
+          ]
+        }
+      ],
+      "executionCommands": [
+        "python3 tests/e2e_test.py --scenario=1",
+        "python3 tests/e2e_test.py --scenario=2",
+        "python3 tests/e2e_test.py --scenario=3"
+      ]
+    },
+    "testReport": {
+      "passCriteria": {
+        "unitTests": "所有测试用例通过，覆盖率 ≥ 80%",
+        "integrationTests": "MCP 服务器成功启动，工具调用正常",
+        "openCodeIntegration": "工具被正确发现，调用无错误",
+        "e2eTests": "完成核心场景，用户体验流畅",
+        "performanceTests": "单文件处理时间 < 30 秒",
+        "errorHandling": "异常情况不会导致崩溃"
+      },
+      "template": {
+        "title": "WrongMath MCP 测试报告",
+        "sections": [
+          "测试日期",
+          "测试人员",
+          "测试环境",
+          "测试结果汇总",
+          "发现问题",
+          "备注"
+        ]
+      }
+    }
+  },
+
+  "deployment": {
+    "steps": [
+      "确认所有依赖已安装: pip install -r requirements.txt",
+      "确认配置文件正确（检查 OpenCode settings.json）",
+      "验证 API Key 有效",
+      "启动 OpenCode 验证",
+      "执行测试流程",
+      "记录日志"
+    ],
+    "monitoring": {
+      "logLocation": "mcp_server.log",
+      "metrics": [
+        "OCR 调用次数",
+        "平均响应时间",
+        "错误率",
+        "API 配额使用情况"
+      ]
+    }
+  },
+
+  "maintenance": {
+    "commonIssues": [
+      {
+        "issue": "API 调用失败",
+        "cause": "API Key 无效",
+        "solution": "检查并更新 API Key"
+      },
+      {
+        "issue": "识别准确率低",
+        "cause": "图片质量差",
+        "solution": "提高图片 DPI 或增强对比度"
+      },
+      {
+        "issue": "处理超时",
+        "cause": "文件过大",
+        "solution": "压缩文件或分页处理"
+      },
+      {
+        "issue": "OpenCode 无法启动 MCP",
+        "cause": "路径错误",
+        "solution": "检查 server.py 路径"
+      }
+    ],
+    "iterationPlan": [
+      "支持批量文件处理",
+      "添加图片预处理功能",
+      "支持自定义输出模板",
+      "添加识别历史记录",
+      "支持其他 OCR 提供商"
+    ]
+  },
+
+  "capabilities": {
+    "fileAccess": true,
+    "ocrProvider": "SiliconFlow (DeepSeek-OCR)",
+    "supportedFormats": ["pdf", "jpg", "jpeg", "png"],
+    "outputFormats": ["markdown", "latex"],
+    "features": [
+      "数学公式识别（LaTeX 格式）",
+      "几何图形描述",
+      "PDF 多页处理",
+      "函数表达式识别",
+      "多栏布局支持",
+      "自动保存到 output/ 文件夹",
+      "自动清除题号前缀"
+    ]
+  },
+
+  "quickStart": {
+    "steps": [
+      "克隆项目: git clone https://github.com/your-repo/wrongmath-mcp.git",
+      "安装依赖: pip install -r requirements.txt",
+      "配置 API Key: export SILICONFLOW_API_KEY=sk-xxx",
+      "复制 openCodeConfig.config 到 OpenCode settings.json",
+      "修改路径和 API Key",
+      "重启 OpenCode",
+      "开始使用: 请读取 /Users/gubin/project/wrongmathf4/docs/豆包爱学-错题组卷-20260110_1.pdf",
+      "查看输出: output/豆包爱学-错题组卷-20260110_1.md"
+    ]
+  }
+}
