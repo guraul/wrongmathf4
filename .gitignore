@@ -48,6 +48,18 @@ frontend/uploads/
 frontend/output/
 logs/
 
+# Process Management
+*.pid
+.pids/
+
+# Trae / AI Assistant
+.trae/
+
+# Old Project Structure (after refactor)
+src/
+web.py
+run_server.sh
+
 # OS
 .DS_Store
 Thumbs.db
@@ -64,3 +76,5 @@ Thumbs.db
 *.bak
 tmp/
 temp/
+*.tar.gz
+*.zip

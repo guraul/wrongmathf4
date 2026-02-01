@@ -77,6 +77,21 @@
             "wrong": "const filesWithSize = validFiles.map(file => ({ ...file, name: file.name, size: file.size }));",
             "correct": "const filesWithSize = validFiles.map(file => ({ id: Math.random().toString(36).substr(2, 9), name: file.name, file }));"
           }
+        },
+        "chineseFilenameUpload": {
+          "issue": "包含中文字符的文件名上传失败，提示 'Type error' 或 'Cannot read ... (this model does not support image input)'",
+          "symptoms": "中文文件名上传时报错，文件无法正常识别",
+          "rootCause": "浏览器在 HTTP 头中使用 ISO-8859-1 编码发送中文文件名，导致传输过程中文件名损坏",
+          "fix": "前端使用 encodeURIComponent URL 编码文件名，后端使用 urllib.parse.unquote 解码",
+          "affectedFiles": [
+            "frontend/app/page.js - handleFilesAdded() 和 startRecognition()",
+            "servers/web.py - upload endpoint"
+          ],
+          "solutionCode": {
+            "frontend": "headers: { 'X-File-Name': encodeURIComponent(fileData.name || 'file') }",
+            "backend": "from urllib.parse import unquote; original_name = unquote(request.headers.get('X-File-Name'))"
+          },
+          "userAction": "如果遇到此错误，请清除浏览器缓存（F12 → 右键刷新 → 'Hard Reload and Clear Cache'）并重试"
         }
       }
     },
@@ -106,10 +121,11 @@
       "mcp": {
         "wrongmath": {
           "type": "local",
-          "command": [
-            "python3",
-            "/Users/gubin/project/wrongmathf4/src/server.py"
-          ],
+      "command": [
+        "python3",
+        "-m",
+        "servers.mcp"
+      ],
           "enabled": true,
           "environment": {
             "SILICONFLOW_API_KEY": "sk-your-actual-api-key-here",
@@ -128,7 +144,7 @@
       "安装后端依赖: pip install -r requirements.txt",
       "安装前端依赖: cd frontend && npm install",
       "配置 API Key: export SILICONFLOW_API_KEY=sk-xxx",
-      "Web UI 模式: 启动后端 python3 web.py (端口 8000)，启动前端 cd frontend && npm run dev (端口 3000)",
+      "Web UI 模式: 启动后端 python3 -m servers.web (端口 8000)，启动前端 cd frontend && npm run dev (端口 3000)",
       "MCP 模式: 复制 openCodeConfig.config 到 OpenCode settings.json",
       "开始使用: 访问 http://localhost:3000 或在 OpenCode 中使用 MCP 工具"
     ]

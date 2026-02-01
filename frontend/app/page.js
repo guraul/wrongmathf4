@@ -105,12 +105,12 @@ export default function Home() {
 
         logger.debug('File read as ArrayBuffer', { size: arrayBuffer.byteLength, first20Bytes: new Uint8Array(arrayBuffer).slice(0, 20) });
 
-        const uploadResponse = await fetch(`${API_BASE}/api/upload`, {
+         const uploadResponse = await fetch(`${API_BASE}/api/upload`, {
           method: 'POST',
           body: arrayBuffer,
           headers: {
             'Content-Type': fileData.type || 'application/octet-stream',
-            'X-File-Name': fileData.name || 'file',
+            'X-File-Name': encodeURIComponent(fileData.name || 'file'),
           },
         });
         
@@ -181,8 +181,9 @@ export default function Home() {
     }
   };
 
-  const saveResult = async () => {
-    if (!currentResult?.content) return;
+  const saveResult = async (editedContent = null) => {
+    const contentToSave = editedContent || currentResult?.content;
+    if (!contentToSave) return;
 
     try {
       const filename = `wrongmath_${Date.now()}.md`;
@@ -192,7 +193,7 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          content: currentResult.content,
+          content: contentToSave,
           filename,
         }),
       });
@@ -202,6 +203,14 @@ export default function Home() {
       const result = await response.json();
       logger.info('Result saved', { filepath: result.file_path });
       showToast(`已保存: ${filename}`, 'success');
+      
+      // 如果保存的是编辑后的内容，更新 currentResult
+      if (editedContent && currentResult) {
+        setCurrentResult({
+          ...currentResult,
+          content: editedContent
+        });
+      }
       
       window.open(result.download_url, '_blank');
     } catch (error) {

@@ -5,17 +5,27 @@ import re
 import sys
 from typing import Any, Dict, List, Optional
 
+from dotenv import load_dotenv
+
 from mcp.server import Server
 from mcp.server.models import InitializationOptions
-from mcp.server import stdio
+from mcp.server.stdio import stdio_server
 import mcp.types as types
 
-from .services.file_processor import process_file, get_file_info
-from .services.ocr_service import create_ocr_service
-from .utils.logger import setup_logger
-from .utils.validators import ValidationError, FileNotFoundError
+from core.services.file_processor import process_file, get_file_info
+from core.services.ocr_service import create_ocr_service
+from core.utils.logger import setup_logger
+from core.utils.validators import ValidationError, FileNotFoundError
+
+# Load .env file from project root
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+env_file = os.path.join(project_root, '.env')
+load_dotenv(env_file)
 
 logger = setup_logger("server")
+logger.info(f"Project root: {project_root}")
+logger.info(f"Loading .env from: {env_file}")
+logger.info(f"API Key set: {'Yes' if os.getenv('SILICONFLOW_API_KEY') else 'No'}")
 
 
 def clean_question_numbers(text: str) -> str:
@@ -363,24 +373,19 @@ async def main():
             logger.warning("SILICONFLOW_API_KEY not found in environment variables")
         
         # Run the server using stdio transport
-        async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
+        async with stdio_server() as (read_stream, write_stream):
             await server.run(
                 read_stream,
                 write_stream,
-                InitializationOptions(
-                    server_name="wrongmath",
-                    server_version="1.0.0",
-                    capabilities=server.get_capabilities(
-                        notification_options=None,
-                        experimental_capabilities={}
-                    )
-                )
+                server.create_initialization_options()
             )
             
     except KeyboardInterrupt:
         logger.info("Server interrupted by user")
     except Exception as e:
+        import traceback
         logger.error(f"Server error: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         sys.exit(1)
 
 

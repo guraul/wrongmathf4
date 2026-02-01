@@ -4,9 +4,39 @@
 
 **WrongMath** is a math OCR tool that converts math problem images/PDFs to Markdown + LaTeX format.
 
-- **Repository**: https://github.com/guraul/wrongmathf4
+- **Repository**: https://github.com/uraul/wrongmathf4
 - **Tech Stack**: Python (MCP + FastAPI) + Next.js (Frontend)
 - **OCR Provider**: SiliconFlow (DeepSeek-OCR)
+
+---
+
+## Architecture
+
+### Directory Structure
+
+```
+wrongmathf4/
+├── core/                    # 核心业务逻辑（共享）
+│   ├── services/
+│   │   ├── ocr_service.py         # OCR 服务
+│   │   └── file_processor.py      # 文件处理
+│   └── utils/
+│       ├── logger.py              # 日志系统
+│       └── validators.py           # 验证逻辑
+├── servers/                 # 服务器入口（独立包）
+│   ├── web.py                   # FastAPI 服务器
+│   └── mcp.py                   # MCP 服务器
+├── frontend/                # Next.js 前端
+├── tests/                   # 测试套件
+└── requirements.txt
+```
+
+### Separation of Concerns
+
+- **core/**: 纯业务逻辑，无框架依赖
+- **servers/**: 协议适配和路由
+- **frontend/**: Web UI 实现
+- **tests/**: 测试覆盖
 
 ---
 
@@ -37,9 +67,9 @@ pip install -r requirements.txt
 
 ### Run Server (MCP stdio mode)
 ```bash
-python3 -m src.server
+python3 -m servers.mcp
 # Or use the startup script:
-./run_server.sh
+./start_all.sh
 ```
 
 ### Run Web UI (Recommended)
@@ -48,7 +78,7 @@ python3 -m src.server
 ```bash
 cd /Users/gubin/project/wrongmathf4
 source venv/bin/activate
-python3 web.py
+python3 -m servers.web
 # Runs on http://localhost:8000
 ```
 
@@ -89,7 +119,7 @@ pytest tests/test_ocr_service.py::TestOCRService::test_recognize_text_success -v
 ## Code Style Guidelines
 
 ### Imports
-- Use absolute imports from project root: `from src.services.ocr_service import ...`
+- Use absolute imports from project root: `from core.services.ocr_service import ...`
 - Group imports: stdlib → third-party → local
 - Never use relative imports like `from .services import ...`
 - Standard: Python 3.13+, type hints required
@@ -123,7 +153,7 @@ pytest tests/test_ocr_service.py::TestOCRService::test_recognize_text_success -v
 - Return structured error responses in API
 
 ### Logging
-- Use `setup_logger()` from `src.utils.logger`
+- Use `setup_logger()` from `core.utils.logger`
 - Log format: `[%(asctime)s] %(name)s - %(levelname)s - %(message)s`
 - Levels: DEBUG for dev, INFO for production
 
@@ -209,6 +239,52 @@ const filesWithSize = validFiles.map(file => ({
 }));
 ```
 
+#### Chinese Filename Upload Issue 🔴
+
+**Problem**: Files with Chinese filenames fail with "Type error" or "Cannot read ... (this model does not support image input)"
+
+**Root Cause**: 
+- Browsers (especially Safari) encode Chinese filenames in HTTP headers as ISO-8859-1
+- Frontend was sending raw Chinese filenames which get corrupted in transit
+- Backend was not decoding the filenames correctly
+
+**Solution**:
+
+**Frontend (page.js)**:
+```javascript
+// ✅ CORRECT - URL encode Chinese filenames before sending in HTTP header
+const uploadResponse = await fetch(`${API_BASE}/api/upload`, {
+  method: 'POST',
+  body: arrayBuffer,
+  headers: {
+    'Content-Type': fileData.type || 'application/octet-stream',
+    'X-File-Name': encodeURIComponent(fileData.name || 'file'), // URL encode filename
+  },
+});
+```
+
+**Backend (web.py)**:
+```python
+# ✅ CORRECT - Decode URL encoded filename
+from urllib.parse import unquote
+
+# Extract and decode filename from header
+header_filename = request.headers.get('X-File-Name')
+original_name = None
+if header_filename:
+    try:
+        original_name = unquote(header_filename)
+    except Exception as e:
+        logger.error(f"Filename decoding failed: {e}")
+        original_name = header_filename
+```
+
+**Preventive Measures**:
+- Always URL encode filenames containing special characters before sending in HTTP headers
+- Always decode filenames on the backend side
+- Test with filenames containing various character sets (Chinese, Japanese, Korean, Arabic, etc.)
+- Ensure consistent encoding/decoding methods across frontend and backend
+
 **Affected Files**:
 - `frontend/app/page.js` - `handleFilesAdded()` and `startRecognition()`
 - `frontend/components/FileUpload.jsx` - File list rendering
@@ -221,6 +297,109 @@ const filesWithSize = validFiles.map(file => ({
 **Why Other Browsers Work**:
 - Chrome/Firefox have different File object implementations
 - More tolerant of spread operator on native objects
+
+#### Math Formula Rendering with KaTeX ✅
+
+**Feature**: OCR results now render mathematical formulas using KaTeX library for beautiful mathematical display.
+
+**Supported Formats**:
+- Block formulas: `\[...\]` and `$$...$$` - displayed centered on separate lines
+- Inline formulas: `\(...\)` and `$...$` - displayed inline within text
+
+**Example**:
+```
+Input: \(\frac{1}{3} + \frac{2}{3} = 1\)
+Output: ⅓ + ⅔ = 1 (beautiful mathematical symbols)
+
+Input: \[E = mc^2\]
+Output: E = mc² (centered block display)
+```
+
+**Affected Files**:
+- `frontend/components/ResultPreview.jsx` - Math rendering and preview component
+- `frontend/app/globals.css` - Math content styles
+- `frontend/package.json` - Added katex dependency
+
+**Implementation Details**:
+```javascript
+// Uses KaTeX for rendering
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+
+// Render block formulas
+katex.renderToString(formula, { displayMode: true });
+
+// Render inline formulas  
+katex.renderToString(formula, { displayMode: false });
+```
+
+**Benefits**:
+- Mathematical formulas displayed as proper math symbols, not LaTeX code
+- Improved readability for math problems
+- Support for fractions, integrals, matrices, and other LaTeX expressions
+
+#### Editable Result Preview ✅
+
+**Feature**: OCR results can be edited before saving with full math formula support.
+
+**Modes**:
+- **Preview Mode** (default): Shows rendered mathematical formulas
+- **Edit Mode**: Shows raw Markdown + LaTeX text for editing
+
+**Functionality**:
+1. Click "编辑" (Edit) to switch to edit mode
+2. Modify the text and LaTeX formulas freely
+3. Click "预览" (Preview) to see rendered formulas
+4. Click "保存文件" (Save) to save edited content
+
+**Affected Files**:
+- `frontend/components/ResultPreview.jsx` - Added edit/preview toggle
+- `frontend/app/page.js` - Updated saveResult to support edited content
+
+**Implementation**:
+```javascript
+const [isEditing, setIsEditing] = useState(false);
+
+const handleEditToggle = () => {
+  setIsEditing(!isEditing);
+};
+
+// Toggle between textarea (edit) and math renderer (preview)
+{isEditing ? (
+  <textarea value={content} onChange={handleContentChange} />
+) : (
+  <div className="math-content">{renderMath(content)}</div>
+)}
+```
+
+#### Auto-Formatting of Math Problems ✅
+
+**Feature**: OCR results are automatically formatted for better readability.
+
+**Formatting Rules**:
+- Question numbers get line breaks before them
+- Empty lines between questions for clear separation
+- Preserves original Markdown + LaTeX structure
+
+**Example**:
+```
+Before:
+1. Calculate x2. Solve for y
+
+After:
+1. Calculate x
+
+2. Solve for y
+```
+
+**Implementation**:
+```javascript
+const formatContent = (rawContent) => {
+  let formatted = rawContent.replace(/(\d+\.\s)/g, '\n$1');  // Line break before question numbers
+  formatted = formatted.replace(/\n\s*\n/g, '\n\n');        // Ensure proper spacing
+  return formatted;
+};
+```
 
 ### Common Patterns
 - Always validate file paths before processing
@@ -316,12 +495,13 @@ ImportError: attempted relative import with no known parent package
 **Root Cause**: Python cannot recognize relative import paths (like `from .services.file_processor`)
 
 **Solution**:
-1. Use `python3 -m src.server` to run the module
-2. Call `python3 -m src.server` directly in deployment scripts
+1. Use `python3 -m servers.mcp` to run the MCP server
+2. Use `python3 -m servers.web` to run the Web backend
 
 **Lessons Learned**:
 - Avoid relative imports in scripts
 - Use absolute imports or python3 -m method consistently
+- After architecture refactor, moved from src/ to core/servers/
 - Document correct running methods in deployment documentation
 
 ---
@@ -716,14 +896,20 @@ TypeError: 'Server' object is not callable
 ### File Structure (File Structure)
 ```
 wrongmathf4/
-├── src/ (Core implementation: 3 sub-modules, 6 .py files)
-├── web.py (FastAPI backend)
+├── core/ (Core business logic: 3 sub-modules, 6 .py files)
+│   ├── services/ (OCR and file processing)
+│   └── utils/ (Logger and validators)
+├── servers/ (Server entry points)
+│   ├── web.py (FastAPI backend)
+│   └── mcp.py (MCP server)
 ├── frontend/ (Next.js frontend)
 │   ├── app/ (Pages and styles)
 │   └── components/ (React components)
 ├── tests/ (Test suite: 4 test files)
 ├── tests/fixtures/ (Test data)
-└── Documentation and deployment (7 documents and scripts)
+├── start_all.sh (Service management script)
+├── stop_services.sh (Service stop script)
+└── Documentation and deployment (8 documents and scripts)
 ```
 
 ---

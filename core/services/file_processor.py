@@ -6,8 +6,8 @@ from typing import List, Tuple
 import fitz  # PyMuPDF
 from PIL import Image
 
-from src.utils.logger import setup_logger
-from src.utils.validators import ValidationError, FileNotFoundError
+from core.utils.logger import setup_logger
+from core.utils.validators import ValidationError, FileNotFoundError
 
 logger = setup_logger("file_processor")
 

@@ -57,6 +57,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+.trae/
 *.swp
 *.swo
 *~
@@ -66,3 +67,11 @@ Thumbs.db
 *.bak
 tmp/
 temp/
+
+# Process IDs
+.pids/
+*.pid
+
+# Old source structure (moved after refactor)
+src/
+web.py

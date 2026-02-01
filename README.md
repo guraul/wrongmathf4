@@ -35,6 +35,10 @@ A pure local Python MCP (Model Context Protocol) server that uses DeepSeek-OCR t
 | JPEG | `.jpg`, `.jpeg` | 10 MB |
 | PNG | `.png` | 10 MB |
 
+### 文件名支持
+- **支持中文文件名** - 已处理编码问题，支持包含中文字符的文件名
+- **支持特殊字符** - 文件名包含空格、中文、日文、韩文、阿拉伯文等字符都能正常处理
+
 ### 输出格式
 - **Markdown** - 人类可读的文本格式
 - **LaTeX** - 数学公式包裹在 `$$...$$` 或 `$...$` 中
@@ -76,8 +80,9 @@ cd ..
 
 **启动后端:**
 ```bash
+cd /Users/gubin/project/wrongmathf4
 source venv/bin/activate
-python3 web.py
+python3 -m servers.web
 # 运行在 http://localhost:8000
 ```
 
@@ -103,10 +108,11 @@ npm run dev
   "mcp": {
     "wrongmath": {
       "type": "local",
-      "command": [
-        "python3",
-        "/absolute/path/to/wrongmath-mcp/src/server.py"
-      ],
+        "command": [
+          "python3",
+          "-m",
+          "servers.mcp"
+        ],
       "enabled": true,
       "environment": {
         "SILICONFLOW_API_KEY": "sk-your-actual-api-key-here",
@@ -122,7 +128,7 @@ npm run dev
 **启动 MCP 服务器:**
 ```bash
 source venv/bin/activate
-python3 -m src.server
+python3 -m servers.mcp
 ```
 
 ### 环境变量配置
@@ -166,15 +172,16 @@ export LOG_LEVEL=INFO
 
 ```
 wrongmath-mcp/
-├── src/                          # MCP 核心实现
-│   ├── server.py                  # MCP 服务器
+├── core/                          # 核心业务逻辑（共享）
 │   ├── services/
 │   │   ├── ocr_service.py         # DeepSeek-OCR 服务
 │   │   └── file_processor.py      # PDF/图像处理
 │   └── utils/
 │       ├── logger.py              # 日志系统
 │       └── validators.py           # 输入验证
-├── web.py                         # FastAPI 后端 (Web UI)
+├── servers/                       # 服务器入口（独立包）
+│   ├── web.py                     # FastAPI 后端 (Web UI)
+│   └── mcp.py                     # MCP 服务器
 ├── frontend/                      # Next.js 前端
 │   ├── app/
 │   │   ├── page.js               # 主页面
@@ -271,6 +278,15 @@ wrongmath-mcp/
 原因: 使用扩展运算符导致 File 对象丢失方法
 解决: 已修复，使用包装对象保留 File 原型
 详见: AGENTS.md "Frontend Development" 部分
+```
+
+**中文文件名上传失败**
+```
+问题: 中文文件名提示 "Type error" 或 "Cannot read ... (this model does not support image input)"
+原因: HTTP 头编码导致中文文件名在传输过程中损坏
+解决: 已修复，前端使用 encodeURIComponent 编码，后端使用 urllib.parse.unquote 解码
+        用户需要清除浏览器缓存 (F12 → 右键刷新 → "Hard Reload and Clear Cache")
+详见: AGENTS.md "中文字符文件名上传问题"
 ```
 
 **API 调用失败**

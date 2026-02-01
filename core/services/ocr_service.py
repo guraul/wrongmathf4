@@ -8,8 +8,8 @@ from pathlib import Path
 import openai
 from openai import AsyncOpenAI
 
-from src.utils.logger import setup_logger
-from src.utils.validators import ValidationError
+from core.utils.logger import setup_logger
+from core.utils.validators import ValidationError
 
 logger = setup_logger("ocr_service")
 
@@ -71,6 +71,9 @@ class OCRService:
 要求：
 - 数学公式用 $...$ 或 $$...$$
 - 题目用中文
+- 每个题目之间用空行分隔，以便于阅读
+- 保留题目编号和格式
+- 尽可能保留原始文档的排版结构
 
 开始识别："""
 
