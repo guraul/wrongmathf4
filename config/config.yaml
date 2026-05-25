@@ -1,0 +1,31 @@
+agent:
+  name: WrongMath
+  max_concurrent: 3
+  auto_cleanup: true
+  cleanup_hours: 24
+
+channels:
+  rest:
+    enabled: true
+    host: "0.0.0.0"
+    port: 8080
+  wechat:
+    enabled: false
+  mcp:
+    enabled: false
+  filewatch:
+    enabled: false
+
+subjects:
+  - 数学
+  - 语文
+  - 英语
+  - 物理
+  - 化学
+
+llm:
+  provider: deepseek
+  model: deepseek-chat
+  base_url: https://api.deepseek.com
+  max_tokens: 4096
+  temperature: 0.1
