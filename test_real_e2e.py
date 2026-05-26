@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import pytest
-from core.services.file_processor import process_file
+from core.services.image_preprocessor import process_and_split_to_base64
 from core.services.ocr_service import OCRService
 from agent.services.llm_service import LLMService
 from agent.services.result_saver import save_result
@@ -37,10 +37,10 @@ class TestRealE2E:
     async def test_full_pipeline(self):
         """Full pipeline: image → OCR → LLM verify → save output."""
 
-        # Step 1: File → base64 images
-        images, num_pages = process_file(str(SAMPLE_IMAGE))
-        assert len(images) > 0, "No images extracted"
-        print(f"  Extracted {len(images)} image(s), {num_pages} page(s)")
+        # Step 1: Preprocess (enhance + split tall image) → base64
+        images, num_chunks = process_and_split_to_base64(str(SAMPLE_IMAGE))
+        assert len(images) > 0, "No images after preprocessing"
+        print(f"  Preprocessed into {len(images)} chunk(s)")
 
         # Step 2: OCR
         ocr = OCRService()

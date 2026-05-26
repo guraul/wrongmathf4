@@ -169,7 +169,7 @@ class TestAgentE2E:
 
         # Mock the scheduler's external dependencies
         with (
-            patch("agent.scheduler.process_file", return_value=(["b64img"], 1)),
+            patch("agent.scheduler.process_and_split_to_base64", return_value=(["b64img"], 1)),
             patch("agent.scheduler.OCRService"),
             patch("agent.scheduler.LLMService.verify",
                   new=AsyncMock(return_value={

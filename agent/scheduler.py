@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from core.services.file_processor import process_file
+from core.services.image_preprocessor import process_and_split_to_base64
 from core.services.ocr_service import OCRService
 from agent.services.llm_service import LLMService
 from agent.services.result_saver import save_result
@@ -22,8 +22,10 @@ async def scheduler_loop(engine):
             logger.info(f"Processing task {task.id}: {task.file_path}")
 
             loop = asyncio.get_event_loop()
-            images, num_pages = await loop.run_in_executor(None, process_file, task.file_path)
-            logger.info(f"Extracted {len(images)} images")
+            images, num_chunks = await loop.run_in_executor(
+                None, process_and_split_to_base64, task.file_path
+            )
+            logger.info(f"Preprocessed into {len(images)} chunk(s)")
 
             raw_text = await ocr_service.recognize_text(images)
             logger.info(f"OCR result: {len(raw_text)} chars")

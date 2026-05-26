@@ -66,16 +66,19 @@ class OCRService:
         """
         try:
             # Create OCR prompt (shortened to fit token limit)
-            prompt = """识别图片中的数学公式和文字。用 Markdown + LaTeX 格式输出。
+            prompt = """你是一个数学试卷 OCR 助手。提取图片中的数学题目，用 Markdown + LaTeX 格式输出。
 
 要求：
+- 只输出题目内容，忽略页眉页脚、重复的标题、无关说明文字
+- 如果多行内容重复（如同一行打印了多次），只保留一次
 - 数学公式用 $...$ 或 $$...$$
-- 题目用中文
-- 每个题目之间用空行分隔，以便于阅读
-- 保留题目编号和格式
-- 尽可能保留原始文档的排版结构
+- 每题用 `### 题号` 开头，题号保留原标题编号
+- 题目之间用空行隔开
+- 如果图片是试卷的一部分，按试卷顺序逐题输出
+- 不要添加 OCR 过程描述、不要加额外的说明文字
+- 只输出识别到的题目内容
 
-开始识别："""
+开始："""
 
             # Prepare image content for OpenAI API
             image_content = []
@@ -106,7 +109,7 @@ class OCRService:
                                 "content": image_content
                             }
                         ],
-                        max_tokens=2048,
+                        max_tokens=4096,
                         temperature=0.1
                     )
                     
