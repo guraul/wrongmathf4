@@ -1,8 +1,8 @@
 import asyncio
 import logging
 from core.services.image_preprocessor import process_and_split_to_base64
-from core.services.ocr_service import OCRService
-from agent.services.llm_service import LLMService
+from agent.services.glm_service import GLMService
+from agent.services.diagram_renderer import generate_tikz
 from agent.services.result_saver import save_result
 
 logger = logging.getLogger("agent.scheduler")
@@ -10,8 +10,7 @@ logger = logging.getLogger("agent.scheduler")
 
 async def scheduler_loop(engine):
     logger.info("Scheduler started")
-    ocr_service = OCRService()
-    llm_service = LLMService()
+    glm = GLMService()
 
     while engine.state == "processing":
         task = await engine.queue.get()
@@ -27,21 +26,32 @@ async def scheduler_loop(engine):
             )
             logger.info(f"Preprocessed into {len(images)} chunk(s)")
 
-            raw_text = await ocr_service.recognize_text(images)
-            logger.info(f"OCR result: {len(raw_text)} chars")
+            # Step 1: GLM-4.5V → structured questions + diagram descriptions
+            result = await glm.process_image(images)
+            logger.info(f"Detected subject: {result.get('subject', '?')}, "
+                        f"questions: {len(result.get('questions', []))}")
 
-            verified = await llm_service.verify(raw_text)
-            logger.info(f"Detected subject: {verified['subject']}")
+            # Step 2: Generate TikZ for questions with diagrams
+            for q in result.get("questions", []):
+                if q.get("has_diagram") and q.get("diagram"):
+                    desc = q["diagram"].get("description", "")
+                    labels = q["diagram"].get("labels", [])
+                    if desc:
+                        tikz = await generate_tikz(desc, labels)
+                        q["tikz_code"] = tikz
+                        logger.info(f"Generated diagram for Q{q['number']} "
+                                    f"({'TikZ' if tikz else 'none'})")
 
-            result_path = await save_result(task, verified, raw_text)
-            task.subject = verified["subject"]
+            # Step 3: Save result
+            result_path = await save_result(task, result)
+            task.subject = result.get("subject", "未分类")
             task.status = "done"
 
             await engine.notify_all({
                 "task_id": task.id,
                 "source": task.source,
-                "subject": verified["subject"],
-                "questions": len(verified.get("questions", [])),
+                "subject": result.get("subject"),
+                "questions": len(result.get("questions", [])),
                 "file_path": result_path,
             })
 

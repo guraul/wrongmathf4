@@ -9,11 +9,10 @@ logger = logging.getLogger("agent.result_saver")
 
 async def save_result(
     task: Task,
-    verified: dict,
-    raw_text: str,
+    result: dict,
     base_dir: str = "output",
 ) -> str:
-    subject = verified.get("subject", "未分类")
+    subject = result.get("subject", "未分类")
     date = time.strftime("%Y-%m-%d")
     subject_dir = Path(base_dir) / subject
     subject_dir.mkdir(parents=True, exist_ok=True)
@@ -30,7 +29,20 @@ task_id: {task.id}
 
 """
 
-    content = raw_text.strip()
+    questions = result.get("questions", [])
+    md_parts = []
+
+    for q in questions:
+        number = q.get("number", 1)
+        content = q.get("content", "")
+        tikz = q.get("tikz_code", "")
+
+        md_parts.append(f"### {number}\n\n{content.strip()}\n")
+
+        if tikz:
+            md_parts.append(f"```tikz\n{tikz}\n```\n\n")
+
+    content = "\n".join(md_parts).strip()
 
     existing = ""
     if file_path.exists():
@@ -41,5 +53,5 @@ task_id: {task.id}
     else:
         file_path.write_text(existing + "\n\n---\n\n" + content, encoding="utf-8")
 
-    logger.info(f"Saved result: {file_path}")
+    logger.info(f"Saved result: {file_path} ({len(questions)} questions)")
     return str(file_path)
