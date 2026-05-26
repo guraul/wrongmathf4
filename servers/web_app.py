@@ -1,8 +1,10 @@
 import io
 import os
+import tempfile
 from pathlib import Path
-from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from pydantic import BaseModel
 import weasyprint
 
 app = FastAPI(title="WrongMath Web UI", version="1.0.0")
@@ -42,7 +44,7 @@ async def list_output():
 async def get_output(subject: str, filename: str):
     file_path = OUTPUT_DIR / subject / filename
     if not file_path.exists():
-        return {"error": "File not found"}, 404
+        return JSONResponse({"error": "File not found"}, status_code=404)
     content = file_path.read_text(encoding="utf-8")
     return {"content": content, "filename": filename}
 
@@ -51,19 +53,23 @@ async def get_output(subject: str, filename: str):
 async def download_output(subject: str, filename: str):
     file_path = OUTPUT_DIR / subject / filename
     if not file_path.exists():
-        return {"error": "File not found"}, 404
+        return JSONResponse({"error": "File not found"}, status_code=404)
     return FileResponse(str(file_path), filename=filename, media_type="text/markdown")
 
 
+class MergeRequest(BaseModel):
+    files: list[str]
+
+
 @app.post("/api/merge")
-async def merge_to_pdf(files: list[str] = Form(...)):
+async def merge_to_pdf(body: MergeRequest):
     content = []
-    for f in files:
+    for f in body.files:
         fp = OUTPUT_DIR / f
         if fp.exists():
             content.append(fp.read_text(encoding="utf-8"))
     if not content:
-        return {"error": "No valid files"}, 400
+        return JSONResponse({"error": "No valid files"}, status_code=400)
 
     html_parts = []
     for c in content:
@@ -71,11 +77,13 @@ async def merge_to_pdf(files: list[str] = Form(...)):
     html_content = "<html><body>" + "".join(html_parts) + "</body></html>"
 
     pdf_bytes = weasyprint.HTML(string=html_content).write_pdf()
+    tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+    tmp.write(pdf_bytes)
+    tmp.close()
     return FileResponse(
-        io.BytesIO(pdf_bytes),
+        tmp.name,
         filename="merged.pdf",
         media_type="application/pdf",
-        headers={"Content-Disposition": "attachment; filename=merged.pdf"},
     )
 
 
@@ -156,9 +164,11 @@ async def web_ui():
         };
 
         document.getElementById('mergeBtn').onclick = async () => {
-            const form = new FormData();
-            selectedFiles.forEach(f => form.append('files', f));
-            const res = await fetch('/api/merge', { method: 'POST', body: form });
+            const res = await fetch('/api/merge', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({files: selectedFiles})
+            });
             if (res.ok) {
                 const blob = await res.blob();
                 const url = URL.createObjectURL(blob);

@@ -4,6 +4,6 @@ Servers Module
 Server implementations for Web UI (FastAPI) and MCP (stdio).
 """
 
-from . import web, mcp
+from . import mcp
 
-__all__ = ["web", "mcp"]
+__all__ = ["mcp"]
