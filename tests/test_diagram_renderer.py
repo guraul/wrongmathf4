@@ -1,34 +1,43 @@
-import pytest
-from unittest.mock import AsyncMock, patch
-from agent.services.diagram_renderer import generate_tikz, _extract_tikz
+from agent.services.diagram_renderer import shapes_to_tikz
 
 
-class TestExtractTikz:
-    def test_extracts_full_tikzpicture(self):
-        text = "prefix\n\\begin{tikzpicture}\n\\draw (0,0) rectangle (1,1);\n\\end{tikzpicture}\nsuffix"
-        result = _extract_tikz(text)
-        assert "\\begin{tikzpicture}" in result
-        assert "\\end{tikzpicture}" in result
-        assert "\\draw" in result
+class TestShapesToTikz:
+    def test_empty_shapes(self):
+        assert shapes_to_tikz([], []) == ""
 
-    def test_returns_none_for_no_tikz(self):
-        assert _extract_tikz("just text") is None
+    def test_single_rectangle(self):
+        shapes = [{"type": "rectangle", "x1": 0, "y1": 0, "x2": 14, "y2": 14, "label": ""}]
+        result = shapes_to_tikz(shapes, [])
+        assert "\\draw[thick] (0,0) rectangle (14,14);" in result
 
+    def test_rectangle_with_label(self):
+        shapes = [{"type": "rectangle", "x1": 0, "y1": 2, "x2": 12, "y2": 14, "label": "A"}]
+        result = shapes_to_tikz(shapes, [])
+        assert "\\node at (6.0,8.0) {A};" in result
 
-class TestGenerateTikz:
-    @pytest.mark.asyncio
-    async def test_generates_tikz_from_description(self):
-        tikz_code = "\\begin{tikzpicture}\n\\draw (0,0) rectangle (14,14);\n\\end{tikzpicture}"
+    def test_two_squares_diagram(self):
+        shapes = [
+            {"type": "rectangle", "x1": 0, "y1": 2, "x2": 12, "y2": 14, "label": "A"},
+            {"type": "rectangle", "x1": 12, "y1": 0, "x2": 14, "y2": 2, "label": "B"},
+            {"type": "rectangle", "x1": 0, "y1": 0, "x2": 12, "y2": 2, "label": ""},
+            {"type": "rectangle", "x1": 12, "y1": 2, "x2": 14, "y2": 14, "label": ""},
+        ]
+        labels = [{"text": "2cm", "x": 13, "y": 8}]
+        result = shapes_to_tikz(shapes, labels)
+        assert "\\draw[thick] (0,0) rectangle (14,14);" in result
+        assert "\\node at (6.0,8.0) {A};" in result
+        assert "\\node at (13.0,1.0) {B};" in result
+        assert "\\node at (13,8) {2cm};" in result
 
-        with patch("agent.services.diagram_renderer.AsyncOpenAI") as mock_openai:
-            mock_client = AsyncMock()
-            mock_openai.return_value = mock_client
-            mock_response = AsyncMock()
-            mock_response.choices = [AsyncMock()]
-            mock_response.choices[0].message.content = tikz_code
-            mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
-
-            result = await generate_tikz("大正方形14x14", ["A", "B"])
-
-        assert "\\begin{tikzpicture}" in result
-        assert "\\draw" in result
+    def test_line_diagram(self):
+        shapes = [
+            {"type": "line", "x1": 10, "y1": 20, "x2": 100, "y2": 20, "label": "线段图"},
+        ]
+        labels = [
+            {"text": "每天看32页", "x": 15, "y": 15},
+            {"text": "还剩98页", "x": 85, "y": 15},
+        ]
+        result = shapes_to_tikz(shapes, labels)
+        assert "\\draw (10,20) -- (100,20);" in result
+        assert "\\node at (15,15) {每天看32页};" in result
+        assert "\\node at (85,15) {还剩98页};" in result

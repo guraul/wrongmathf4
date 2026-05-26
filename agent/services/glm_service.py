@@ -13,32 +13,39 @@ class GLMService:
         self.model = "zai-org/GLM-4.5V"
 
     async def process_image(self, base64_images: list[str]) -> dict:
-        prompt = """你是数学题整理助手。看这张图片，完成以下任务：
+        prompt = """提取图片中所有数学题，重新编号为 1,2,3...
+数学公式用 LaTeX 格式。
 
-1. 提取图片中所有数学题，重新编号为1,2,3...
-2. 数学公式用 LaTeX 格式
-3. 如果题目有配图，详细描述配图的几何结构：
-   - 有哪些形状？位置关系？尺寸关系？
-   - 所有标注文字分别在哪里？
-   - 图形如何分割？
+对有配图的题，提取每个形状的精确坐标（大图形左下角为原点 0,0）：
+- 矩形：{type: "rectangle", x1, y1, x2, y2, label}
+- 线段：{type: "line", x1, y1, x2, y2, label}
+- 标注文字：{type: "label", text, x, y}
 
-只输出JSON格式，不要其他内容：
+只输出 JSON：
 {
-  "subject": "科目名称",
+  "subject": "科目",
   "questions": [
     {
       "number": 1,
-      "content": "题目完整内容",
+      "content": "题目内容",
+      "has_diagram": false,
+      "shapes": [],
+      "labels": []
+    },
+    {
+      "number": 2,
+      "content": "题目内容",
       "has_diagram": true,
-      "diagram": {
-        "description": "配图详细描述：形状、位置、尺寸、分割方式",
-        "labels": ["A", "B", "2cm"]
-      }
+      "shapes": [
+        {"type": "rectangle", "x1": 0, "y1": 0, "x2": 14, "y2": 14, "label": ""},
+        {"type": "rectangle", "x1": 0, "y1": 2, "x2": 12, "y2": 14, "label": "A"}
+      ],
+      "labels": [
+        {"text": "2cm", "x": 13, "y": 8}
+      ]
     }
   ]
-}
-
-注意：如果题目没有配图，has_diagram设为false，diagram设为null。"""
+}"""
 
         content = [{"type": "text", "text": prompt}]
         for b64 in base64_images:

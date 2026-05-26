@@ -174,11 +174,9 @@ class TestAgentE2E:
                   new=AsyncMock(return_value={
                       "subject": "数学",
                       "questions": [
-                          {"number": 1, "content": "$x+1=2$", "has_diagram": False, "diagram": None}
+                          {"number": 1, "content": "$x+1=2$", "has_diagram": False, "tikz_code": ""}
                       ],
                   })),
-            patch("agent.scheduler.generate_tikz",
-                  new=AsyncMock(return_value="")),
             patch("agent.scheduler.save_result",
                   new=AsyncMock(return_value=str(tmp_path / "output" / "数学" / "2026-05-24.md"))),
         ):
