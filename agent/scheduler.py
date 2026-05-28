@@ -2,7 +2,6 @@ import asyncio
 import logging
 from core.services.image_preprocessor import process_and_split_to_base64
 from agent.services.glm_service import GLMService
-from agent.services.diagram_renderer import shapes_to_tikz
 from agent.services.result_saver import save_result
 
 logger = logging.getLogger("agent.scheduler")
@@ -26,32 +25,25 @@ async def scheduler_loop(engine):
             )
             logger.info(f"Preprocessed into {len(image_chunks)} chunk(s)")
 
-            # Step 1: GLM-4.5V extracts questions (faster, no TikZ in this call)
+            # Step 1: GLM-4.5V extracts questions + diagram flags
             result = await glm.process_image(image_chunks)
             logger.info(f"Detected subject: {result.get('subject', '?')}, "
                         f"questions: {len(result.get('questions', []))}")
 
-            # Step 2: Generate TikZ from extracted coordinates (deterministic)
-            for q in result.get("questions", []):
-                if q.get("has_diagram"):
-                    tikz = shapes_to_tikz(
-                        q.get("shapes", []),
-                        q.get("labels", [])
-                    )
-                    q["tikz_code"] = tikz
-                    logger.info(f"Diagram Q{q['number']}: TikZ={'✓' if tikz else '✗'}")
+            # Step 2: Save as worksheet-format Markdown
+            result_path = save_result(result)
+            subject = result.get("subject", "未分类")
+            logger.info(f"Saved: {result_path}")
 
-            # Step 3: Save result
-            result_path = await save_result(task, result)
-            task.subject = result.get("subject", "未分类")
+            task.subject = subject
             task.status = "done"
 
             await engine.notify_all({
                 "task_id": task.id,
                 "source": task.source,
-                "subject": result.get("subject"),
+                "subject": subject,
                 "questions": len(result.get("questions", [])),
-                "file_path": result_path,
+                "file_path": str(result_path),
             })
 
         except Exception as e:

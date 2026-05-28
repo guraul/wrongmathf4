@@ -1,57 +1,40 @@
-import os
+"""Convert GLM-4.5V JSON output to worksheet-format Markdown."""
+
 import time
-import logging
 from pathlib import Path
-from agent.task import Task
-
-logger = logging.getLogger("agent.result_saver")
 
 
-async def save_result(
-    task: Task,
-    result: dict,
-    base_dir: str = "output",
-) -> str:
+def save_result(result: dict) -> str:
     subject = result.get("subject", "未分类")
     date = time.strftime("%Y-%m-%d")
-    subject_dir = Path(base_dir) / subject
-    subject_dir.mkdir(parents=True, exist_ok=True)
-
-    file_path = subject_dir / f"{date}.md"
-
-    frontmatter = f"""---
-title: {subject} 错题 {date}
-subject: {subject}
-date: {date}
-source: {task.source}
-task_id: {task.id}
----
-
-"""
-
     questions = result.get("questions", [])
-    md_parts = []
+
+    lines = [
+        "---",
+        f"title: {subject} 错题 {date}",
+        f"subject: {subject}",
+        f"date: {date}",
+        "---",
+        "",
+    ]
 
     for q in questions:
-        number = q.get("number", 1)
-        content = q.get("content", "")
-        tikz = q.get("tikz_code", "")
+        lines.append(f"{q['number']}. {q['content']}")
+        lines.append("")
+        if q.get("has_diagram"):
+            lines.append("> *（配图）*")
+            lines.append("")
+        lines.append("<br>")
+        lines.append("<br>")
+        lines.append("<br>")
+        lines.append("<br>")
+        lines.append("")
 
-        md_parts.append(f"### {number}\n\n{content.strip()}\n")
+    md = "\n".join(lines)
 
-        if tikz:
-            md_parts.append(f"```tikz\n{tikz}\n```\n\n")
+    output_dir = Path("output") / subject
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / f"{date}.md"
+    output_path.write_text(md, encoding="utf-8")
 
-    content = "\n".join(md_parts).strip()
-
-    existing = ""
-    if file_path.exists():
-        existing = file_path.read_text(encoding="utf-8")
-
-    if not existing:
-        file_path.write_text(frontmatter + content, encoding="utf-8")
-    else:
-        file_path.write_text(existing + "\n\n---\n\n" + content, encoding="utf-8")
-
-    logger.info(f"Saved result: {file_path} ({len(questions)} questions)")
-    return str(file_path)
+    return str(output_path)

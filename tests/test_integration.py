@@ -11,7 +11,7 @@ async def test_agent_lifecycle():
     mock_glm_result = {
         "subject": "数学",
         "questions": [
-            {"number": 1, "content": "$x+1=2$", "has_diagram": False, "tikz_code": ""}
+            {"number": 1, "content": "$x+1=2$", "has_diagram": False}
         ]
     }
 
@@ -19,8 +19,6 @@ async def test_agent_lifecycle():
         patch("agent.scheduler.process_and_split_to_base64", return_value=(["b64img"], 1)),
         patch("agent.scheduler.GLMService.process_image",
               new=AsyncMock(return_value=mock_glm_result)),
-        patch("agent.scheduler.save_result",
-              new=AsyncMock(return_value="/tmp/test.md")),
     ):
         await engine.start()
         assert engine.state == "idle"

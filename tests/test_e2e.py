@@ -174,11 +174,9 @@ class TestAgentE2E:
                   new=AsyncMock(return_value={
                       "subject": "数学",
                       "questions": [
-                          {"number": 1, "content": "$x+1=2$", "has_diagram": False, "tikz_code": ""}
+                          {"number": 1, "content": "$x+1=2$", "has_diagram": False}
                       ],
                   })),
-            patch("agent.scheduler.save_result",
-                  new=AsyncMock(return_value=str(tmp_path / "output" / "数学" / "2026-05-24.md"))),
         ):
             await engine.start()
             assert engine.state == "idle"
