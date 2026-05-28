@@ -41,7 +41,5 @@ class TestRealE2E:
 
         for q in result["questions"]:
             has_diagram = q.get("has_diagram", False)
-            print(f"    Q{q['number']}: diagram={has_diagram}")
-            if has_diagram and q.get("diagram"):
-                print(f"      labels: {q['diagram'].get('labels', [])}")
-                print(f"      desc: {q['diagram']['description'][:80]}...")
+            marker = " 📐" if has_diagram else ""
+            print(f"    Q{q['number']}{marker}: {q['content'][:60]}")
