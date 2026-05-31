@@ -42,11 +42,15 @@ frontend/.env*
 !frontend/.env.example
 
 # Output & Uploads
-output/*.md
-!output/.gitkeep
+output/
+input/
+uploads/
 frontend/uploads/
 frontend/output/
 logs/
+
+# Abandoned Java backend
+backend/
 
 # Process Management
 *.pid
