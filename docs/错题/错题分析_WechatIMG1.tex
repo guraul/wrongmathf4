@@ -1,0 +1,139 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[UTF8]{ctex}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+
+\geometry{left=2cm,right=2cm,top=2cm,bottom=2cm}
+
+\title{数学错题分析报告}
+\author{WrongMath OCR 识别}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{计算题部分}
+
+\subsection{直接写出得数}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{题号} & \textbf{题目} & \textbf{答案} & \textbf{批改} \\
+\hline
+1 & $12 \times 80$ & 960 & \textcolor{green}{\checkmark} \\
+\hline
+2 & $96 \div 24$ & 4 & \textcolor{green}{\checkmark} \\
+\hline
+3 & $840 - 240 \div 6$ & 800 & \textcolor{green}{\checkmark} \\
+\hline
+4 & $500 \div 70$ & $7 \cdots 10$ & \textcolor{green}{\checkmark} \\
+\hline
+5 & $400 \div 50$ & 8 & \textcolor{green}{\checkmark} \\
+\hline
+6 & $12 \times 101$ & 1212 & \textcolor{green}{\checkmark} \\
+\hline
+7 & $1250 \div (25 \times 5)$ & 10 & \textcolor{green}{\checkmark} \\
+\hline
+8 & $(100) + 100 = (20) \times 10$ & 100, 20 & \textcolor{green}{\checkmark} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{探究计算方法}
+
+\textbf{应用题：}每套书有 14 本，李老师买了 12 套，一共买了多少本？
+
+\textbf{方法一（分拆为 $4 \times 3$）：}
+\begin{align*}
+14 \times 12 &= 14 \times 3 \times 4 \\
+&= 42 \times 4 \\
+&= 168
+\end{align*}
+
+\textbf{方法二（分拆为 $10 + 2$）：}
+\begin{align*}
+14 \times 12 &= 14 \times 10 + 14 \times 2 \\
+&= 140 + 28 \\
+&= 168
+\end{align*}
+
+\subsection{列竖式计算}
+
+\textbf{(1)} $320 \times 45 = 14400$ \quad \textcolor{green}{\checkmark}
+
+\textbf{(2)} $4200 \div 28 = 150$ \quad \textcolor{green}{\checkmark}
+
+\textbf{(3)} $2\square06 \div 24$ \quad \textcolor{red}{\ding{55} \textbf{错题，扣14分}}
+
+\begin{tcolorbox}[colback=red!5!white,colframe=red!75!black,title=错题详情]
+\textbf{题目要求：}先在$\square$里填数，使商中间有0，再列竖式计算。
+
+\textbf{学生答案：}填了4，即 $2406 \div 24$
+
+\textbf{学生竖式：}
+\[
+\begin{array}{r}
+      100 \\
+\cline{2-2}
+24 \overline{)2406} \\
+     24 \\
+\cline{2-2}
+       06
+\end{array}
+\]
+
+\textbf{错误分析：}
+\begin{itemize}
+    \item 学生计算 $2406 \div 24 = 100$ 余 6
+    \item 但题目要求"使商中间有0"
+    \item 正确答案应填 \textbf{4} 或 \textbf{8}，使商为三位数且中间为0
+    \item 正确计算：$2406 \div 24 = 100 \cdots 6$ 或 $2806 \div 24$
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{递等式计算}
+
+\begin{align*}
+600 \div 24 + 76 &= 25 + 76 = 101 \quad \textcolor{green}{\checkmark} \\
+2105 - 105 \times 16 &= 2105 - 1680 = 425 \quad \textcolor{green}{\checkmark} \\
+(28 + 55) \times 22 &= 83 \times 22 = 1826 \quad \textcolor{green}{\checkmark} \\
+3380 \div (650 \div 50) &= 3380 \div 13 = 260 \quad \textcolor{green}{\checkmark}
+\end{align*}
+
+\section{错题汇总}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{题号} & \textbf{题目} & \textbf{错误类型} & \textbf{扣分} \\
+\hline
+3-(3) & $2\square06 \div 24$ & 填空及竖式计算错误 & -14分 \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{知识点分析}
+
+\subsection{错题涉及知识点}
+\begin{itemize}
+    \item \textbf{除法竖式计算}：三位数除以两位数
+    \item \textbf{商的性质}：理解"商中间有0"的含义
+    \item \textbf{验算方法}：乘法验算除法
+\end{itemize}
+
+\subsection{建议练习方向}
+\begin{enumerate}
+    \item 加强对"商中间有0"概念的理解
+    \item 练习构造满足特定条件的除法算式
+    \item 巩固除法验算方法
+\end{enumerate}
+
+\end{document}

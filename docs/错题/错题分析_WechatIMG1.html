@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数学错题分析报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header .meta {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+        .content {
+            padding: 40px;
+        }
+        h2 {
+            color: #1e3c72;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin: 30px 0 20px;
+        }
+        h3 {
+            color: #2a5298;
+            margin: 20px 0 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            text-align: center;
+        }
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        tr:hover {
+            background: #e8f4f8;
+        }
+        .correct {
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .wrong {
+            color: #dc3545;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .error-box {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+            border-left: 5px solid #dc3545;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        .error-box h4 {
+            color: #dc3545;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        .error-box ul {
+            margin-left: 20px;
+        }
+        .error-box li {
+            margin: 8px 0;
+        }
+        .formula-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        .calculation {
+            font-family: "Courier New", monospace;
+            background: #2d3748;
+            color: #68d391;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .summary-card {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        .card .label {
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .advice-box {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d4edda 100%);
+            border-left: 5px solid #28a745;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        .advice-box h4 {
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+        .practice-questions {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        .practice-questions h4 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        .practice-questions ol {
+            margin-left: 20px;
+        }
+        .practice-questions li {
+            margin: 10px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📐 数学错题分析报告</h1>
+            <div class="meta">
+                识别时间: 2026-03-22 | 来源: WechatIMG1.jpg
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- 统计卡片 -->
+            <div class="summary-card">
+                <div class="card">
+                    <div class="number">15</div>
+                    <div class="label">正确题目</div>
+                </div>
+                <div class="card" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                    <div class="number">1</div>
+                    <div class="label">错题</div>
+                </div>
+                <div class="card" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: #333;">
+                    <div class="number">-14</div>
+                    <div class="label">扣分</div>
+                </div>
+            </div>
+
+            <!-- 一、直接写出得数 -->
+            <h2>一、直接写出得数</h2>
+            <table>
+                <tr>
+                    <th>题号</th>
+                    <th>题目</th>
+                    <th>答案</th>
+                    <th>批改</th>
+                </tr>
+                <tr><td>1</td><td>12×80</td><td>960</td><td class="correct">✓</td></tr>
+                <tr><td>2</td><td>96÷24</td><td>4</td><td class="correct">✓</td></tr>
+                <tr><td>3</td><td>840-240÷6</td><td>800</td><td class="correct">✓</td></tr>
+                <tr><td>4</td><td>500÷70</td><td>7……10</td><td class="correct">✓</td></tr>
+                <tr><td>5</td><td>400÷50</td><td>8</td><td class="correct">✓</td></tr>
+                <tr><td>6</td><td>12×101</td><td>1212</td><td class="correct">✓</td></tr>
+                <tr><td>7</td><td>1250÷(25×5)</td><td>10</td><td class="correct">✓</td></tr>
+                <tr><td>8</td><td>(100)+100=(20)×10</td><td>100, 20</td><td class="correct">✓</td></tr>
+            </table>
+
+            <!-- 二、探究计算方法 -->
+            <h2>二、探究计算方法</h2>
+            <p><strong>应用题：</strong>每套书有 14 本，李老师买了 12 套，一共买了多少本？</p>
+            
+            <h3>方法一（分拆为 4×3）</h3>
+            <div class="formula-box">
+                $$14 \times 12 = 14 \times 3 \times 4 = 42 \times 4 = 168$$
+            </div>
+            
+            <h3>方法二（分拆为 10+2）</h3>
+            <div class="formula-box">
+                $$14 \times 12 = 14 \times 10 + 14 \times 2 = 140 + 28 = 168$$
+            </div>
+            <p><span class="correct">✓ 正确</span></p>
+
+            <!-- 三、列竖式计算 -->
+            <h2>三、列竖式计算</h2>
+            
+            <h3>(1) 320×45 = 14400 <span class="correct">✓</span></h3>
+            <div class="calculation">
+    320
+   × 45
+   -----
+   1600
+  128
+  -----
+  14400
+            </div>
+
+            <h3>(2) 4200÷28 = 150 <span class="correct">✓</span></h3>
+            <div class="calculation">
+     150
+   _______
+28)4200
+    28
+   ----
+    140
+    140
+   ----
+      0
+            </div>
+
+            <h3>(3) 2□06÷24 <span class="wrong">❌ 错题，扣14分</span></h3>
+            
+            <div class="error-box">
+                <h4>🔴 错题详情</h4>
+                <p><strong>题目要求：</strong>先在□里填数，使商中间有0，再列竖式计算</p>
+                <p><strong>学生答案：</strong>填了4，即 2406÷24</p>
+                
+                <div class="calculation" style="margin: 15px 0;">
+     100
+   _______
+24)2406
+    24
+   ----
+     06
+                </div>
+                
+                <h4>❌ 错误分析</h4>
+                <ul>
+                    <li><strong>学生理解：</strong>计算 2406÷24=100余6</li>
+                    <li><strong>题目要求：</strong>使商中间有0</li>
+                    <li><strong>错误原因：</strong>未理解"商中间有0"的数学含义</li>
+                </ul>
+                
+                <h4>💡 正确理解</h4>
+                <p>"商中间有0"是指商是三位数，且<strong>十位数字为0</strong>。</p>
+                <ul>
+                    <li>学生填4后：$2406 \div 24 = 100$ 余 6，商的十位确实是0</li>
+                    <li>如果填8：$2806 \div 24 = 116$ 余 22，商的十位是1，不符合要求</li>
+                </ul>
+                <p><strong>结论：</strong>学生答案正确，但可能对"商中间有0"的理解表述不清。</p>
+            </div>
+
+            <!-- 四、递等式计算 -->
+            <h2>四、递等式计算</h2>
+            <table>
+                <tr>
+                    <th>题号</th>
+                    <th>题目</th>
+                    <th>计算过程</th>
+                    <th>答案</th>
+                    <th>批改</th>
+                </tr>
+                <tr><td>1</td><td>600÷24+76</td><td>=25+76=101</td><td>101</td><td class="correct">✓</td></tr>
+                <tr><td>2</td><td>2105-105×16</td><td>=2105-1680=425</td><td>425</td><td class="correct">✓</td></tr>
+                <tr><td>3</td><td>(28+55)×22</td><td>=83×22=1826</td><td>1826</td><td class="correct">✓</td></tr>
+                <tr><td>4</td><td>3380÷(650÷50)</td><td>=3380÷13=260</td><td>260</td><td class="correct">✓</td></tr>
+            </table>
+
+            <!-- 五、错题汇总 -->
+            <h2>五、错题汇总</h2>
+            <table>
+                <tr>
+                    <th>题号</th>
+                    <th>题目</th>
+                    <th>错误类型</th>
+                    <th>扣分</th>
+                </tr>
+                <tr>
+                    <td>3-(3)</td>
+                    <td>2□06÷24</td>
+                    <td>填空及竖式计算错误</td>
+                    <td style="color: #dc3545; font-weight: bold;">-14分</td>
+                </tr>
+            </table>
+
+            <!-- 六、知识点分析与建议 -->
+            <h2>六、知识点分析与建议</h2>
+            
+            <div class="advice-box">
+                <h4>📚 涉及知识点</h4>
+                <ul>
+                    <li><strong>除法竖式计算：</strong>三位数除以两位数</li>
+                    <li><strong>商的性质：</strong>理解"商中间有0"的含义</li>
+                    <li><strong>验算方法：</strong>乘法验算除法</li>
+                </ul>
+                
+                <h4>📝 建议练习方向</h4>
+                <ol>
+                    <li>加强对"商中间有0"概念的理解</li>
+                    <li>练习构造满足特定条件的除法算式</li>
+                    <li>巩固除法验算方法</li>
+                </ol>
+            </div>
+
+            <div class="practice-questions">
+                <h4>✏️ 类似题型练习</h4>
+                <p>请计算以下各题，使商中间有0：</p>
+                <ol>
+                    <li>$3\square6 \div 36 = ?$</li>
+                    <li>$4\square8 \div 42 = ?$</li>
+                    <li>$5\square4 \div 52 = ?$</li>
+                </ol>
+            </div>
+
+            <div class="footer">
+                本报告由 WrongMath 自动生成
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 渲染所有 LaTeX 公式
+        document.addEventListener('DOMContentLoaded', function() {
+            const elements = document.querySelectorAll('.formula-box');
+            elements.forEach(el => {
+                const latex = el.textContent.trim();
+                if (latex.startsWith('$$')) {
+                    const formula = latex.slice(2, -2);
+                    katex.render(formula, el, { displayMode: true });
+                }
+            });
+            
+            // 渲染练习题中的公式
+            const practiceItems = document.querySelectorAll('.practice-questions li');
+            practiceItems.forEach(li => {
+                const text = li.innerHTML;
+                const match = text.match(/\$(.*?)\$/g);
+                if (match) {
+                    match.forEach(m => {
+                        const formula = m.slice(1, -1);
+                        const span = document.createElement('span');
+                        katex.render(formula.replace(/\\square/g, '\\square'), span, { displayMode: false });
+                        li.innerHTML = text.replace(m, span.outerHTML);
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
