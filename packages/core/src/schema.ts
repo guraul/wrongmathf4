@@ -106,7 +106,7 @@ export const Question = z.object({
   verdict: Verdict,
   /** 0–1，判定层的把握程度；低置信不阻断流程，只进 evidence。 */
   confidence: z.number().min(0).max(1),
-  /** 三票各自的原始结论，排查时用；不进复刻卷。 */
+  /** 判定过程的附加信息，排查时用；不进复刻卷。结构由判定层决定。 */
   evidence: z.record(z.string(), z.unknown()).default({}),
 });
 

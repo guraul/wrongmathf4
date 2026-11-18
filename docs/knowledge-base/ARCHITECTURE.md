@@ -1,7 +1,7 @@
 # ARCHITECTURE.md — 管线与判定
 
-> 最后更新: 2026-11-18 | commit: `dceb2e9`
-> 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/index.ts`
+> 最后更新: 2026-11-18 | commit: `e5dc88f`
+> 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/ingest/io.ts`
 
 ## 五段管线
 
@@ -13,6 +13,14 @@
         │        └─ DeepSeek Flash，放大后送图，每页两轮
         └─ PDF→PNG、EXIF 旋转、放大 2–3 倍、红笔颜色掩膜
 ```
+
+### ingest 的具体口径
+
+- **只放大不缩小**：默认 2.5×，长边上限 3000px。V1 反着来（压到 2000px 以内），小字就是那样糊掉的。
+- **先摆正再算尺寸**：手机照片带 EXIF 旋转，`sharp().rotate()` 之后拿到的宽高才是真实朝向。
+- **红笔阈值**：`r-g ≥ 22 && r-b ≥ 12 && r ≥ 90`。纸张偏黄会抬高 B，所以同时约束两个色差；`r ≥ 90` 挡掉阴影里的暗红。
+- **掩膜只做颜色分类**，不做连通域。把标记映射到具体题目属于 judge 段（M2），那时才需要切块。
+- 已知噪声：画面外的红色物体（桌沿、笔）也会被判为红，M2 需要先定卷面边界再过滤。
 
 每段的边界：
 

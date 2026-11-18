@@ -11,8 +11,6 @@ channels:
     port: 19238
   wechat:
     enabled: false
-  mcp:
-    enabled: false
   filewatch:
     enabled: false
 

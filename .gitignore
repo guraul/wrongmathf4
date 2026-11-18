@@ -99,3 +99,6 @@ test/screenshots/
 
 # TS 增量编译缓存
 *.tsbuildinfo
+
+# 交付流程本地状态（审核记录 / 跳过审计）
+.dsh-web/

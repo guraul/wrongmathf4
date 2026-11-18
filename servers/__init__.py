@@ -1,9 +1,5 @@
 """
 Servers Module
 
-Server implementations for Web UI (FastAPI) and MCP (stdio).
+The FastAPI app lives in web_app.py.
 """
-
-from . import mcp
-
-__all__ = ["mcp"]
