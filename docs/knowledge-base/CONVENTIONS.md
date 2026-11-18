@@ -1,7 +1,7 @@
 # CONVENTIONS.md — 编码约定与红线
 
-> 最后更新: 2026-11-18 | commit: `dceb2e9`
-> 覆盖路径: `tsconfig.base.json`, `vitest.config.ts`, `package.json`
+> 最后更新: 2026-11-18 | commit: `e5dc88f`
+> 覆盖路径: `tsconfig.base.json`, `vitest.config.ts`, `package.json`, `packages/core/src/ingest/pixels.ts`
 
 ## 代码
 
@@ -24,6 +24,8 @@
 - **只用 pnpm**；不出现 `package-lock.json` / `yarn.lock`。
 - 加依赖前先说清楚为什么；能不加就不加。
 - 需要跑构建脚本的包（如 `esbuild`）写进 `pnpm-workspace.yaml` 的 `allowBuilds`，不要用 `pnpm.onlyBuiltDependencies`（pnpm 12 不再读它）。
+- **原生依赖只允许 `sharp` 一个**（图像解码/缩放）。像素级判定写成纯函数放 `pixels.ts`，不依赖 sharp，方便测试。
+- CLI 脚本用 `tsx` 跑，不引入构建步骤；脚本一律相对仓根传路径，或自己 `path.resolve`。
 
 ## 红线
 

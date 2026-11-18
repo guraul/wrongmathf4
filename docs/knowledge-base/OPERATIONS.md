@@ -1,7 +1,7 @@
 # OPERATIONS.md — 运行、部署与踩坑
 
-> 最后更新: 2026-11-18 | commit: `dceb2e9`
-> 覆盖路径: `packages/web/next.config.mjs`, `.dsh/pipeline.json`, `pnpm-workspace.yaml`
+> 最后更新: 2026-11-18 | commit: `e5dc88f`
+> 覆盖路径: `packages/web/next.config.mjs`, `.dsh/pipeline.json`, `pnpm-workspace.yaml`, `packages/core/src/ingest/io.ts`, `packages/core/src/cli/mask.ts`
 
 ## 环境变量
 
@@ -19,10 +19,14 @@
 
 ```bash
 pnpm install          # 首次
-pnpm test             # 契约测试
+pnpm test             # 契约 + 图像输入测试
 pnpm typecheck        # 类型检查
 pnpm dev              # http://localhost:19238
+pnpm mask test/fixtures/2026-11-17/p1-geo5.jpg /tmp/mask.png   # 红笔掩膜可视化
 ```
+
+`pnpm mask` 必须在**仓根**执行：脚本是 `tsx packages/core/src/cli/mask.ts`，
+若用 `pnpm -F @wrongmath/core mask`，工作目录会切到包内，相对路径就找不到了。
 
 ## 依赖安装的坑
 
@@ -34,6 +38,8 @@ pnpm dev              # http://localhost:19238
    ```
    写成旧字段会报 `ERR_PNPM_IGNORED_BUILDS`，而错误提示只让你跑 `pnpm approve-builds`，不说该写哪。
 3. 默认 registry 是 npmmirror（`registry.npmmirror.com`）。首次装 next 会慢（数十秒），之后走缓存。
+4. **sharp 是原生模块**（libvips 预编译），`packages/core` 依赖它做解码与缩放；不需要编译工具链，但换平台要重装。
+5. **CLI 用 tsx 跑 TypeScript**（根 devDependency），没有独立构建步骤。
 
 ## 交付流程
 

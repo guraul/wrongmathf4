@@ -1,7 +1,7 @@
 # INDEX.md — 项目知识库索引总览
 
-> 最后更新: 2026-11-18 | commit: `dceb2e9`
-> 覆盖路径: `package.json`, `pnpm-workspace.yaml`, `.dsh/pipeline.json`, `packages/core/src/index.ts`, `packages/web/app/page.tsx`
+> 最后更新: 2026-11-18 | commit: `e5dc88f`
+> 覆盖路径: `package.json`, `pnpm-workspace.yaml`, `.dsh/pipeline.json`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/web/app/page.tsx`
 
 ## 使用说明
 
@@ -26,12 +26,12 @@
 
 ## 当前阶段
 
-**M0（脚手架）已完成**。业务逻辑尚未开始，V1 的 Python 代码仍在仓内运行，按计划在 M1–M7 逐段替换。
+**M1（图像输入）已完成**。识别、判定、渲染尚未开始；V1 的 Python 代码仍在仓内运行，按计划在 M2–M7 逐段替换。
 
 | 能力 | 状态 |
 |---|---|
 | 批次/页面/题目/图形四类契约 | 现行（`packages/core/src/schema.ts`） |
-| 图片放大、红笔掩膜 | 目标（M1） |
+| 图片放大、红笔掩膜 | 现行（`packages/core/src/ingest/`） |
 | 模型识别 + 三票判定 | 目标（M2） |
 | HTML 复刻渲染 | 目标（M3–M4） |
 | 上传/列表/预览/下载界面 | 目标（M5） |
@@ -76,6 +76,7 @@ wrongmathf4/
 | 模块 | 位置 | 职责 |
 |---|---|---|
 | 契约 | `packages/core/src/schema.ts` | 四类数据的 zod 定义与类型导出 |
+| 图像输入 | `packages/core/src/ingest/` | 摆正、放大、红笔掩膜 |
 | 识别 | `packages/core/src/vlm/`（待建） | 图片 → 结构化题目 |
 | 判定 | `packages/core/src/judge/`（待建） | 红笔 / 独立求解 / 规则校验三票 |
 | 渲染 | `packages/core/src/render/`（待建） | 结构化数据 → HTML |
@@ -88,6 +89,7 @@ wrongmathf4/
 | 常见任务 | 命令 / 位置 |
 |---|---|
 | 跑测试 | `pnpm test` |
+| 看红笔掩膜 | `pnpm mask <图片> <输出.png>` |
 | 类型检查 | `pnpm typecheck` |
 | 本地起界面 | `pnpm dev`（端口见 OPERATIONS） |
 | 建任务分支 | `scripts/pipeline/new-task.sh <issue号>` |

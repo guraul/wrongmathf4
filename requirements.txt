@@ -1,5 +1,4 @@
 # MCP Server
-mcp>=0.9.0
 
 # API Client
 openai>=1.0.0

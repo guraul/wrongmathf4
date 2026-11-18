@@ -12,9 +12,11 @@
     "test:watch": "vitest",
     "typecheck": "pnpm -r --if-present typecheck",
     "dev": "pnpm --filter @wrongmath/web dev",
-    "build": "pnpm --filter @wrongmath/web build"
+    "build": "pnpm --filter @wrongmath/web build",
+    "mask": "tsx packages/core/src/cli/mask.ts"
   },
   "devDependencies": {
+    "tsx": "^4.23.15",
     "typescript": "^5.6.3",
     "vitest": "^2.1.8"
   }
