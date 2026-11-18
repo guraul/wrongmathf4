@@ -130,12 +130,10 @@ wrongmathf4/
 ├── stop_services.sh      # 停止脚本
 ├── .pids/              # 进程 ID 文件（自动创建）
 │   ├── backend.pid
-│   ├── frontend.pid
-│   └── mcp.pid
+│   └── frontend.pid
 └── logs/               # 日志文件
     ├── backend.log
-    ├── frontend.log
-    └── mcp.log
+    └── frontend.log
 ```
 
 ## 注意事项
@@ -144,33 +142,6 @@ wrongmathf4/
 2. **日志轮转**: 日志文件会持续追加，建议定期清理
 3. **环境变量**: `.env` 文件中的变量会被自动加载
 4. **依赖检查**: 启动前会检查必要的依赖是否安装
-
-## OpenCode MCP 配置
-
-在 OpenCode 的 `settings.json` 中添加：
-
-```json
-{
-  "mcp": {
-    "wrongmath": {
-      "type": "local",
-      "command": [
-        "python3",
-        "-m",
-      ],
-      "enabled": true,
-      "environment": {
-        "SILICONFLOW_API_KEY": "sk-your-actual-api-key-here",
-        "DEEPSEEK_OCR_MODEL": "deepseek-ai/DeepSeek-OCR",
-        "SILICONFLOW_BASE_URL": "https://api.siliconflow.cn/v1",
-        "LOG_LEVEL": "INFO"
-      }
-    }
-  }
-}
-```
-
-或者使用 `.env` 文件中的配置（推荐）。
 
 ---
 
