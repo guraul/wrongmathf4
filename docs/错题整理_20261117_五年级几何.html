@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>错题整理 · 五年级数学（组合图形 / 公顷与面积）</title>
+<style>
+  :root{
+    --ink:#1f2328; --ink-soft:#4a5056; --line:#d9d3c8; --paper:#fbf9f4;
+    --card:#fff; --accent:#8c3b2a; --accent-soft:#f3e7e2; --blank:#f6f3ec;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:32px 18px 64px;
+    background:radial-gradient(1200px 600px at 50% -10%, #fffdf8 0%, var(--paper) 60%, #f4f0e7 100%);
+    color:var(--ink);
+    font-family:"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC","SimSun",Georgia,serif;
+    font-size:16.5px; line-height:1.85;
+  }
+  .sheet{
+    max-width:840px; margin:0 auto; background:var(--card);
+    border:1px solid var(--line); border-radius:14px;
+    box-shadow:0 10px 30px rgba(60,50,35,.08), 0 2px 6px rgba(60,50,35,.05);
+    padding:40px 44px 48px;
+  }
+  header.top{
+    border-bottom:2px solid var(--ink); padding-bottom:14px; margin-bottom:24px;
+    display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  header.top h1{margin:0; font-size:26px; letter-spacing:.14em}
+  header.top .meta{
+    margin:0; color:var(--ink-soft); font-size:13.5px;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  .summary{display:flex; gap:10px; flex-wrap:wrap; margin:0 0 28px}
+  .summary span{
+    background:var(--accent-soft); color:var(--accent); border-radius:999px; padding:3px 12px;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; font-size:13px;
+  }
+  .q{margin:0 0 40px; padding:0 0 32px; border-bottom:1px dashed var(--line)}
+  .q:last-of-type{border-bottom:none; margin-bottom:12px; padding-bottom:0}
+  .q-head{display:flex; align-items:center; gap:10px; margin-bottom:12px}
+  .badge{
+    background:var(--ink); color:#fff; border-radius:5px; padding:2px 9px; font-size:12.5px;
+    letter-spacing:.06em; font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  .type{
+    color:var(--ink-soft); border:1px solid var(--line); border-radius:5px; padding:2px 9px;
+    font-size:12.5px; font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  .num{font-weight:700; font-size:19px; margin-right:2px}
+  .stem{margin:0 0 10px}
+  figure.fig{margin:12px 0 0; flex:0 0 auto}
+  figure.fig svg{display:block}
+  figcaption{
+    margin-top:4px; text-align:center; font-size:12px; color:var(--ink-soft);
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  .fill{display:inline-block; min-width:5.2em; border-bottom:1.6px solid var(--ink);
+        height:1.1em; vertical-align:-.18em; margin:0 .2em}
+  .work{margin-top:16px; border:1px dashed #cdc6b8; border-radius:9px; background:var(--blank); padding:10px 14px 12px}
+  .work .lbl{
+    font-size:12px; color:#8d8778; letter-spacing:.08em;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  .work .lines i{display:block; height:26px; border-bottom:1px solid #ddd6c7}
+  .work .lines i:last-child{border-bottom:none}
+  details.answers{margin-top:40px; border-top:2px solid var(--ink); padding-top:18px}
+  details.answers summary{
+    cursor:pointer; list-style:none; color:var(--accent); font-size:14px; letter-spacing:.06em;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  details.answers summary::-webkit-details-marker{display:none}
+  details.answers summary::before{content:"▸ "}
+  details.answers[open] summary::before{content:"▾ "}
+  details.answers .inner{margin-top:12px; color:var(--ink-soft); font-size:15.5px}
+  details.answers dt{font-weight:700; color:var(--ink); margin-top:14px}
+  details.answers dd{margin:2px 0 0; }
+  .pit{color:#8c3b2a}
+  footer.foot{
+    margin-top:24px; padding-top:12px; border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    font-size:12px; color:#9a9488;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  @media print{
+    body{background:#fff; padding:0}
+    .sheet{box-shadow:none; border:none; border-radius:0; padding:0; max-width:none}
+    details.answers{display:none}
+    .q{page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header class="top">
+    <h1>错题整理</h1>
+    <p class="meta">五年级数学 · 组合图形的面积 / 公顷与面积估测 · 2026-11-17</p>
+  </header>
+
+  <div class="summary">
+    <span>共 2 道</span>
+    <span>图形计算 1 道</span>
+    <span>单位填空 1 道</span>
+    <span>已去除作答与批改痕迹</span>
+  </div>
+
+  <!-- ================= 错题 1 ================= -->
+  <article class="q">
+    <div class="q-head">
+      <span class="badge">原卷 一、（2）</span>
+      <span class="type">求组合图形的面积</span>
+    </div>
+
+    <p class="stem">
+      <span class="num">1.</span>
+      求下列组合图形的面积。（单位：cm）
+    </p>
+
+    <figure class="fig">
+      <svg width="330" height="290" viewBox="0 0 330 290" role="img"
+           aria-label="组合图形：上方三角形底4.2厘米、高2厘米；下方梯形上底2.6厘米、下底5厘米、高2.4厘米">
+        <g font-family="'Songti SC','STSong','SimSun',serif" fill="#1f2328">
+          <path d="M40 241 L98 126 L59 126 L160 30 L261 126 L222 126 L280 241 Z"
+                fill="#fdfdfb" stroke="#1f2328" stroke-width="1.6" stroke-linejoin="round"/>
+
+          <line x1="59" y1="126" x2="261" y2="126" stroke="#1f2328" stroke-width="1" stroke-dasharray="4 3"/>
+          <line x1="160" y1="30" x2="160" y2="126" stroke="#1f2328" stroke-width="1" stroke-dasharray="4 3"/>
+          <line x1="98" y1="126" x2="98" y2="241" stroke="#1f2328" stroke-width="1" stroke-dasharray="4 3"/>
+
+          <path d="M160 126 L160 118 L152 118" fill="none" stroke="#1f2328" stroke-width="1"/>
+          <path d="M98 241 L98 233 L106 233" fill="none" stroke="#1f2328" stroke-width="1"/>
+
+          <text x="78" y="146" font-size="13" text-anchor="middle">0.8</text>
+          <text x="160" y="146" font-size="13" text-anchor="middle">2.6</text>
+          <text x="241" y="146" font-size="13" text-anchor="middle">0.8</text>
+          <text x="168" y="84" font-size="13">2</text>
+          <text x="106" y="192" font-size="13">2.4</text>
+          <text x="160" y="263" font-size="13" text-anchor="middle">5</text>
+        </g>
+      </svg>
+    </figure>
+
+    <div class="work">
+      <div class="lbl">我的解答</div>
+      <div class="lines"><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+  </article>
+
+  <!-- ================= 错题 2 ================= -->
+  <article class="q">
+    <div class="q-head">
+      <span class="badge">原卷 几何小实践六 · 二、1</span>
+      <span class="type">填合适的单位</span>
+    </div>
+
+    <p class="stem">
+      <span class="num">2.</span>
+      顾村公园的占地面积约为 4（<span class="fill"></span>）。
+    </p>
+
+    <p class="stem" style="color:var(--ink-soft); font-size:15px;">
+      提示：可选单位有 平方厘米、平方分米、平方米、公顷（ha）、平方千米（km²）。
+    </p>
+
+    <div class="work">
+      <div class="lbl">我的判断依据</div>
+      <div class="lines"><i></i><i></i><i></i></div>
+    </div>
+  </article>
+
+  <!-- ================= 参考答案 ================= -->
+  <details class="answers">
+    <summary>参考答案与思路（点击展开，打印时自动隐藏）</summary>
+    <div class="inner">
+      <dl>
+        <dt>第 1 题 · 13.32 cm²</dt>
+        <dd>
+          把这个图形横着切成两块：<br>
+          ① 上面的三角形：底 = 0.8 + 2.6 + 0.8 = 4.2（cm），高 = 2（cm）<br>
+          &nbsp;&nbsp;面积 = 4.2 × 2 ÷ 2 = <b>4.2（cm²）</b><br>
+          ② 下面的梯形：上底 2.6，下底 5，高 2.4<br>
+          &nbsp;&nbsp;面积 = (2.6 + 5) × 2.4 ÷ 2 = 7.6 × 1.2 = <b>9.12（cm²）</b><br>
+          ③ 合计：4.2 + 9.12 = <b>13.32（cm²）</b><br>
+          <span class="pit">易错点：</span>
+          ① 梯形面积漏掉“÷2”，或者连乘两遍 ÷2（变成除以 4）；
+          ② 三角形的底只用了梯形的上底 2.6，忘了左右各多出的 0.8；
+          ③ 同一题里两次算错但互相抵消不了，最后单位还漏写。
+        </dd>
+
+        <dt>第 2 题 · km²（平方千米）</dt>
+        <dd>
+          一个公园如果只有 4 公顷，就是 40000 m²（约 200 m × 200 m），
+          比学校操场大不了多少，明显偏小。<br>
+          4 km² = 400 公顷 = 4 000 000 m²，才符合一个大型郊野公园的规模
+          （顾村公园实际约 4.3 km²）。<br>
+          <span class="pit">易错点：</span>
+          ① 公顷和平方千米的进率记混（1 km² = 100 公顷）；
+          ② 只看数字“4”觉得公顷也行，没有回到“这个物体到底多大”去想。
+        </dd>
+      </dl>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <span>整理自 2026-11-17 两张作业（组合图形 / 公顷与面积）· 已清除学生笔迹与红笔批改</span>
+    <span>共 2 题</span>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -60,7 +60,7 @@ backend/
 .trae/
 
 # Old Project Structure (after refactor)
-src/
+/src/
 web.py
 run_server.sh
 
@@ -82,3 +82,20 @@ tmp/
 temp/
 *.tar.gz
 *.zip
+
+# Node / pnpm workspace
+node_modules/
+packages/*/dist/
+.next/
+
+# 运行时数据
+data/
+
+# 任务工作树
+.worktrees/
+
+# 浏览器截图
+test/screenshots/
+
+# TS 增量编译缓存
+*.tsbuildinfo
