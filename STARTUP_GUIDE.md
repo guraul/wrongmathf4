@@ -7,8 +7,6 @@
 - `start_all.sh` - 启动 Web UI 服务（前端 + 后端）
 - `stop_services.sh` - 停止 Web UI 服务
 
-**注意**：MCP 服务器由 OpenCode 直接启动和管理，不在脚本控制范围内。
-
 ## 前置条件
 
 1. ✅ Python 虚拟环境已创建 (`venv/`)
@@ -42,8 +40,6 @@
   - 后端: http://localhost:8000
   - 后端 API 文档: http://localhost:8000/docs
 
-注意: MCP 服务器由 OpenCode 启动
-
 日志文件:
   - 后端: logs/backend.log
   - 前端: logs/frontend.log
@@ -69,14 +65,6 @@
 - **端口**: 3000
 - **日志**: `logs/frontend.log`
 - **功能**: Web UI、拖拽上传、进度跟踪
-
-### MCP 服务器（OpenCode 管理）
-- **协议**: stdio
-- **启动方式**: OpenCode 自动启动和管理
-- **配置**: OpenCode settings.json
-- **功能**: OpenCode 集成、MCP 工具
-
-**MCP 服务器不在脚本控制范围内**，由 OpenCode 直接管理。
 
 ## 查看日志
 
@@ -130,12 +118,10 @@ wrongmathf4/
 ├── stop_services.sh      # 停止脚本
 ├── .pids/              # 进程 ID 文件（自动创建）
 │   ├── backend.pid
-│   ├── frontend.pid
-│   └── mcp.pid
+│   └── frontend.pid
 └── logs/               # 日志文件
     ├── backend.log
-    ├── frontend.log
-    └── mcp.log
+    └── frontend.log
 ```
 
 ## 注意事项
@@ -144,34 +130,6 @@ wrongmathf4/
 2. **日志轮转**: 日志文件会持续追加，建议定期清理
 3. **环境变量**: `.env` 文件中的变量会被自动加载
 4. **依赖检查**: 启动前会检查必要的依赖是否安装
-
-## OpenCode MCP 配置
-
-在 OpenCode 的 `settings.json` 中添加：
-
-```json
-{
-  "mcp": {
-    "wrongmath": {
-      "type": "local",
-      "command": [
-        "python3",
-        "-m",
-        "servers.mcp"
-      ],
-      "enabled": true,
-      "environment": {
-        "SILICONFLOW_API_KEY": "sk-your-actual-api-key-here",
-        "DEEPSEEK_OCR_MODEL": "deepseek-ai/DeepSeek-OCR",
-        "SILICONFLOW_BASE_URL": "https://api.siliconflow.cn/v1",
-        "LOG_LEVEL": "INFO"
-      }
-    }
-  }
-}
-```
-
-或者使用 `.env` 文件中的配置（推荐）。
 
 ---
 

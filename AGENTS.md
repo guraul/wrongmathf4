@@ -64,14 +64,12 @@ wrongmathf4/
 ├── core/                      # 共享逻辑
 │   ├── services/
 │   │   ├── image_preprocessor.py  # 图像增强、缩放、base64 编码
-│   │   ├── ocr_service.py         # 旧 DeepSeek-OCR（保留，scheduler 不用）
 │   │   └── file_processor.py      # PDF→图片、文件信息
 │   └── utils/
 │       ├── logger.py              # 日志
 │       └── validators.py          # 路径/文件校验
 ├── servers/
 │   ├── web_app.py             # FastAPI：上传、浏览、下载、PDF 合并
-│   └── mcp.py                 # MCP stdio 服务器（旧模式，保留）
 ├── frontend/                  # Next.js 前端（旧模式，保留）
 ├── tests/                     # 测试（40 通过，1 跳过）
 └── output/                    # 生成结果
