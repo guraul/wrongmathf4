@@ -1,7 +1,7 @@
 # INDEX.md — 项目知识库索引总览
 
-> 最后更新: 2026-11-18 | commit: `425cf5f`
-> 覆盖路径: `package.json`, `pnpm-workspace.yaml`, `.dsh/pipeline.json`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/vlm/client.ts`, `packages/web/app/page.tsx`
+> 最后更新: 2026-11-18 | commit: `eb9158e`
+> 覆盖路径: `package.json`, `pnpm-workspace.yaml`, `.dsh/pipeline.json`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/render/html.ts`, `packages/core/src/vlm/client.ts`, `packages/web/app/page.tsx`
 
 ## 使用说明
 
@@ -26,7 +26,7 @@
 
 ## 当前阶段
 
-**M2（识别 + 三票判定）已完成**（真机回归待配 `DEEPSEEK_API_KEY`）。渲染与界面尚未开始；V1 的 Python 代码仍在仓内运行，按计划在 M3–M7 逐段替换。
+**M3（复刻卷渲染）已完成**。图形 SVG 与界面尚未开始（M4/M5）；V1 的 Python 代码仍在仓内运行，按计划在 M4–M7 逐段替换。
 
 | 能力 | 状态 |
 |---|---|
@@ -92,6 +92,7 @@ wrongmathf4/
 | 看红笔掩膜 | `pnpm mask <图片> <输出.png>` |
 | 跑判定报告 | `pnpm judge <图片> [--mask <图片>]` |
 | 离线复算判定 | `pnpm judge --replay <RawPage.json> --mask <图片>` |
+| 渲染复刻卷 | `pnpm render <questions.json> <输出.html>` |
 | 类型检查 | `pnpm typecheck` |
 | 本地起界面 | `pnpm dev`（端口见 OPERATIONS） |
 | 建任务分支 | `scripts/pipeline/new-task.sh <issue号>` |

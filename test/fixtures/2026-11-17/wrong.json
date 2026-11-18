@@ -1,0 +1,38 @@
+[
+  {
+    "id": "q1",
+    "originalNo": "一（2）",
+    "sequence": 1,
+    "kind": "geometry",
+    "stem": "求下列组合图形的面积。（单位：cm）",
+    "figures": [
+      {
+        "type": "composite",
+        "layout": "stack",
+        "unit": "cm",
+        "parts": [
+          { "shape": "triangle", "base": "4.2", "height": "2" },
+          { "shape": "trapezoid", "top": "2.6", "bottom": "5", "height": "2.4" }
+        ]
+      }
+    ],
+    "teacherMark": "wrong",
+    "solverAnswer": "13.32 cm²",
+    "verdict": "wrong",
+    "confidence": 1,
+    "evidence": { "reason": "老师标记 ✗" }
+  },
+  {
+    "id": "q2",
+    "originalNo": "二.1",
+    "sequence": 2,
+    "kind": "unitFill",
+    "stem": "顾村公园的占地面积约为 4（　）。",
+    "figures": [],
+    "teacherMark": "wrong",
+    "solverAnswer": "km²",
+    "verdict": "wrong",
+    "confidence": 1,
+    "evidence": { "reason": "老师标记 ✗" }
+  }
+]
