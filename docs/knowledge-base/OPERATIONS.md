@@ -1,6 +1,6 @@
 # OPERATIONS.md — 运行、部署与踩坑
 
-> 最后更新: 2026-11-18 | commit: `f433969`
+> 最后更新: 2026-11-18 | commit: `9c14f7d`
 > 覆盖路径: `packages/web/next.config.mjs`, `.dsh/pipeline.json`, `pnpm-workspace.yaml`, `packages/core/src/ingest/io.ts`, `packages/core/src/cli/mask.ts`
 
 ## 环境变量
@@ -8,7 +8,7 @@
 | 变量 | 缺省 | 用途 |
 |---|---|---|
 | `PORT` | `19238` | Web 端口（`packages/web` 的 dev/start 读它） |
-| `DEEPSEEK_API_KEY` | 无 | 模型调用，M2 起必需（V1 的 `.env` 里还没有，需补） |
+| `DEEPSEEK_API_KEY` | 无 | 模型调用，**当前未配置**；缺失时 `pnpm judge` 会提示改用 `--replay` |
 | `DB_PATH` | `data/wrongmath.db` | SQLite 路径（M5 起） |
 | `DATA_DIR` | `data/` | 上传件与产物根目录 |
 | `LOG_LEVEL` | `info` | 日志级别 |
@@ -23,6 +23,8 @@ pnpm test             # 契约 + 图像输入测试
 pnpm typecheck        # 类型检查
 pnpm dev              # http://localhost:19238
 pnpm mask test/fixtures/2026-11-17/p1-geo5.jpg /tmp/mask.png   # 红笔掩膜可视化
+pnpm judge test/fixtures/2026-11-17/p1-geo5.jpg --mask test/fixtures/2026-11-17/p1-geo5.jpg  # 判定报告（需 key）
+pnpm judge --replay test/fixtures/2026-11-17/page1.replay.json --mask test/fixtures/2026-11-17/p1-geo5.jpg  # 离线复算
 ```
 
 `pnpm mask` 必须在**仓根**执行：脚本是 `tsx packages/core/src/cli/mask.ts`，

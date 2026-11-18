@@ -1,7 +1,7 @@
 # ARCHITECTURE.md — 管线与判定
 
-> 最后更新: 2026-11-18 | commit: `f433969`
-> 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/ingest/io.ts`
+> 最后更新: 2026-11-18 | commit: `9c14f7d`
+> 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/ingest/io.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/judge/answer.ts`, `packages/core/src/vlm/client.ts`
 
 ## 五段管线
 
@@ -39,17 +39,26 @@
 | 解题 | 第二次模型调用，**看不到学生答案** | 只给题干与图形参数 |
 | 规则 | 确定性校验 | 单位换算、面积分割和 = 整体、竖式恒等式 |
 
-收敛规则（固定，不转人工）：
+收敛规则（固定，不转人工，代码在 `judge/verdict.ts`）：
 
 ```
-老师 ✗                    → wrong
-老师 √                    → right
-老师无标记 + 求解判错      → wrong
-老师无标记 + 求解判对      → right
-两轮不一致 → 第三轮 → 仍不一致 → wrong（宁可多报）
-规则校验失败               → 覆盖为 wrong
-主观题（说理/比较）        → 不判定，原文转写
+老师 ✗                      → wrong（置信 1.0）
+老师 √                      → right（规则票只记 suspicious，不推翻）
+老师无标记 + 无求解答案      → unknown
+老师无标记 + 规则校验失败    → wrong（置信 0.9）
+老师无标记 + 求解与作答一致  → right（置信 0.85）
+老师无标记 + 求解与作答不同  → wrong（置信 0.85）
+主观题                      → unknown（只转写，不判定）
 ```
+
+答案比对在 `judge/answer.ts`：全角转半角、上标降级（cm²→cm2）、单位别名
+（平方厘米/㎠/cm²→cm2）、0.1% 相对容差。
+
+### 红笔对账只比"有无"
+
+掩膜聚出的簇数**不参与数量对账**：一个勾常被笔画断裂拆成几簇，画面外的红色物体也会进掩膜。
+实测第一页 7 簇、第二页更多，而题目里只有 2–3 处标记。所以只判断「有没有红笔」：
+模型说有标记但掩膜一个红像素都没有（或反过来）才把置信度乘以 0.6 并记入 evidence。
 
 ## 为什么图形不用模型坐标
 

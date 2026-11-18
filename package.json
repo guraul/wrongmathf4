@@ -13,7 +13,8 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "dev": "pnpm --filter @wrongmath/web dev",
     "build": "pnpm --filter @wrongmath/web build",
-    "mask": "tsx packages/core/src/cli/mask.ts"
+    "mask": "tsx packages/core/src/cli/mask.ts",
+    "judge": "tsx packages/core/src/cli/judge.ts"
   },
   "devDependencies": {
     "tsx": "^4.23.15",

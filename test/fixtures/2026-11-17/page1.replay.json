@@ -1,0 +1,33 @@
+{
+  "questions": [
+    {
+      "originalNo": "一（2）",
+      "kind": "geometry",
+      "stem": "求下列组合图形的面积。（单位：cm）",
+      "figures": [
+        {
+          "type": "composite",
+          "layout": "stack",
+          "parts": [
+            { "shape": "triangle", "base": "4.2", "height": "2" },
+            { "shape": "trapezoid", "top": "2.6", "bottom": "5", "height": "2.4" }
+          ]
+        }
+      ],
+      "teacherMark": "wrong",
+      "studentAnswer": "7.92 cm²",
+      "subjective": false
+    },
+    {
+      "originalNo": "一（3）",
+      "kind": "geometry",
+      "stem": "求下列组合图形的面积。（单位：cm）",
+      "figures": [
+        { "type": "composite", "layout": "stack", "parts": [{ "shape": "rect", "width": "15", "height": "10" }] }
+      ],
+      "teacherMark": "right",
+      "studentAnswer": "116 cm²",
+      "subjective": false
+    }
+  ]
+}
