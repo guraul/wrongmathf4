@@ -1,6 +1,6 @@
 # ARCHITECTURE.md — 管线与判定
 
-> 最后更新: 2026-11-18 | commit: `9c14f7d`
+> 最后更新: 2026-11-18 | commit: `425cf5f`
 > 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/ingest/io.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/judge/answer.ts`, `packages/core/src/vlm/client.ts`
 
 ## 五段管线
