@@ -60,10 +60,10 @@ describe("复刻卷渲染", () => {
     expect(html).not.toContain("verdict");
   });
 
-  it("题干文本保留，图形走占位框", () => {
+  it("题干文本保留，图形渲染成 SVG", () => {
     expect(html).toContain("求下列组合图形的面积");
-    expect(html).toContain('class="figure figure-placeholder"');
-    expect(html).toContain('data-type="composite"');
+    expect(html).toContain('class="figure figure-composite"');
+    expect(html).not.toContain("图形待生成");
   });
 
   it("题数写进副标题区", () => {
@@ -81,8 +81,7 @@ describe("复刻卷渲染", () => {
   it("可以注入自定义图形渲染器", () => {
     const custom = renderWorksheet([wrongQuestion], { figureRenderer: () => "<svg data-x></svg>" });
     expect(custom).toContain("<svg data-x></svg>");
-    // 占位框的 DOM 不该出现（CSS 里仍有这个类名，不能直接搜字符串）
-    expect(custom).not.toContain('class="figure figure-placeholder"');
+    expect(custom).not.toContain('class="figure figure-composite"');
   });
 });
 
