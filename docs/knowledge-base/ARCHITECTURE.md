@@ -1,7 +1,7 @@
 # ARCHITECTURE.md — 管线与判定
 
-> 最后更新: 2026-11-18 | commit: `425cf5f`
-> 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/ingest/io.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/judge/answer.ts`, `packages/core/src/vlm/client.ts`
+> 最后更新: 2026-11-18 | commit: `eb9158e`
+> 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/ingest/io.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/judge/answer.ts`, `packages/core/src/render/html.ts`, `packages/core/src/vlm/client.ts`
 
 ## 五段管线
 
@@ -13,6 +13,16 @@
         │        └─ DeepSeek Flash，放大后送图，每页两轮
         └─ PDF→PNG、EXIF 旋转、放大 2–3 倍、红笔颜色掩膜
 ```
+
+### 渲染的口径
+
+复刻卷是给学生重做的，因此**不出现任何判定痕迹**：没有红笔、没有置信度、没有学生原答案，
+原卷题号也不印（重新编号 1..n，避免学生按旧印象找答案）。
+
+- 纯函数：不读盘、不取时间，同一输入两次渲染字节相同（`test/render.test.ts` 有断言）
+- 题干来自模型转写，必须 `escapeHtml` 后再拼进文档
+- 图形通过可注入的 `figureRenderer` 渲染；M4 之前默认输出虚线占位框
+- 打印样式：`break-inside: avoid` 保证一道题不被切成两页
 
 ### ingest 的具体口径
 

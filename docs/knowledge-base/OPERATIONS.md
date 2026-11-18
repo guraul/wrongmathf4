@@ -1,6 +1,6 @@
 # OPERATIONS.md — 运行、部署与踩坑
 
-> 最后更新: 2026-11-18 | commit: `425cf5f`
+> 最后更新: 2026-11-18 | commit: `eb9158e`
 > 覆盖路径: `packages/web/next.config.mjs`, `.dsh/pipeline.json`, `pnpm-workspace.yaml`, `packages/core/src/ingest/io.ts`, `packages/core/src/cli/mask.ts`
 
 ## 环境变量
@@ -25,6 +25,7 @@ pnpm dev              # http://localhost:19238
 pnpm mask test/fixtures/2026-11-17/p1-geo5.jpg /tmp/mask.png   # 红笔掩膜可视化
 pnpm judge test/fixtures/2026-11-17/p1-geo5.jpg --mask test/fixtures/2026-11-17/p1-geo5.jpg  # 判定报告（需 key）
 pnpm judge --replay test/fixtures/2026-11-17/page1.replay.json --mask test/fixtures/2026-11-17/p1-geo5.jpg  # 离线复算
+pnpm render test/fixtures/2026-11-17/wrong.json test/screenshots/worksheet.html  # 渲染复刻卷
 ```
 
 `pnpm mask` 必须在**仓根**执行：脚本是 `tsx packages/core/src/cli/mask.ts`，

@@ -9,7 +9,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "mask": "tsx src/cli/mask.ts",
-    "judge": "tsx src/cli/judge.ts"
+    "judge": "tsx src/cli/judge.ts",
+    "render": "tsx src/cli/render.ts"
   },
   "dependencies": {
     "sharp": "^0.35.5",
