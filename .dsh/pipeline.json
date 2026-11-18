@@ -1,0 +1,6 @@
+{
+  "repo": "guraul/wrongmathf4",
+  "checks": {
+    "packages": ["packages/core", "packages/web"]
+  }
+}

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>错题整理 · 四年级数学（WechatIMG4）</title>
+<style>
+  :root{
+    --ink:#1f2328;
+    --ink-soft:#4a5056;
+    --line:#d9d3c8;
+    --paper:#fbf9f4;
+    --card:#ffffff;
+    --accent:#8c3b2a;
+    --accent-soft:#f3e7e2;
+    --blank:#f6f3ec;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    padding:32px 18px 64px;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #fffdf8 0%, var(--paper) 60%, #f4f0e7 100%);
+    color:var(--ink);
+    font-family:"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC",
+                "SimSun",Georgia,"Times New Roman",serif;
+    font-size:16.5px;
+    line-height:1.85;
+  }
+  .sheet{
+    max-width:840px;margin:0 auto;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    box-shadow:0 10px 30px rgba(60,50,35,.08), 0 2px 6px rgba(60,50,35,.05);
+    padding:40px 44px 48px;
+  }
+  header.top{
+    border-bottom:2px solid var(--ink);
+    padding-bottom:14px;margin-bottom:26px;
+    display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  }
+  header.top h1{font-size:27px;margin:0;letter-spacing:.14em;font-weight:700;}
+  header.top .meta{
+    margin:0;color:var(--ink-soft);font-size:13.5px;letter-spacing:.03em;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  .summary{
+    display:flex;gap:10px;flex-wrap:wrap;margin:0 0 30px;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:13px;color:var(--ink-soft);
+  }
+  .summary span{background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:3px 12px;}
+  .q{margin:0 0 42px;padding:0 0 34px;border-bottom:1px dashed var(--line);}
+  .q:last-of-type{border-bottom:none;margin-bottom:12px;padding-bottom:0;}
+  .q-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .badge{
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:12.5px;letter-spacing:.06em;background:var(--ink);color:#fff;
+    border-radius:5px;padding:2px 9px;
+  }
+  .type{
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:12.5px;color:var(--ink-soft);border:1px solid var(--line);
+    border-radius:5px;padding:2px 9px;
+  }
+  .num{font-weight:700;font-size:19px;margin-right:2px;}
+  .body-row{display:flex;gap:26px;align-items:flex-start;}
+  .body-row .text{flex:1 1 auto;min-width:0;}
+  .stem{margin:0 0 12px;}
+  .stem .u{
+    display:inline-block;min-width:4.6em;border-bottom:1.6px solid var(--ink);
+    height:1.1em;vertical-align:-.18em;margin:0 .18em;
+  }
+  .stem .u.short{min-width:2.6em;}
+  .stem .u.long{min-width:7em;}
+  ol.options{
+    list-style:none;margin:10px 0 0;padding:0;
+    display:grid;grid-template-columns:1fr 1fr;gap:6px 26px;
+  }
+  ol.options li{display:flex;gap:6px;align-items:baseline;}
+  ol.options .k{font-weight:700;min-width:1.6em;}
+  .cards{display:flex;gap:8px;align-items:center;margin:10px 0 4px;flex-wrap:wrap;}
+  .slot{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:30px;height:32px;border:1.6px solid var(--ink);border-radius:3px;
+    background:#fff;font-size:17px;
+  }
+  .op{font-size:18px;padding:0 2px;}
+  .u-inline{
+    display:inline-block;min-width:5.4em;border-bottom:1.6px solid var(--ink);
+    height:1.1em;vertical-align:-.18em;
+  }
+  figure.fig{margin:0;flex:0 0 auto;text-align:center;}
+  figure.fig svg{display:block;}
+  figcaption{
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:12px;color:var(--ink-soft);margin-top:6px;letter-spacing:.04em;
+  }
+  .figrow{display:flex;gap:18px;justify-content:flex-start;flex-wrap:wrap;margin-top:14px;}
+  .work{
+    margin-top:18px;border:1px dashed #cdc6b8;border-radius:9px;
+    background:var(--blank);padding:10px 14px 12px;
+  }
+  .work .lbl{
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:12px;color:#8d8778;letter-spacing:.08em;
+  }
+  .work .lines{margin-top:8px;}
+  .work .lines i{display:block;height:26px;border-bottom:1px solid #ddd6c7;}
+  .work .lines i:last-child{border-bottom:none;}
+  details.answers{margin-top:44px;border-top:2px solid var(--ink);padding-top:18px;}
+  details.answers summary{
+    cursor:pointer;list-style:none;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:14px;letter-spacing:.06em;color:var(--accent);user-select:none;
+  }
+  details.answers summary::-webkit-details-marker{display:none;}
+  details.answers summary::before{content:"▸ ";}
+  details.answers[open] summary::before{content:"▾ ";}
+  details.answers .inner{margin-top:14px;font-size:15.5px;color:var(--ink-soft);}
+  details.answers .inner dt{font-weight:700;color:var(--ink);margin-top:14px;}
+  details.answers .inner dd{margin:2px 0 0 0;}
+  footer.foot{
+    margin-top:26px;padding-top:12px;border-top:1px solid var(--line);
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:12px;color:#9a9488;letter-spacing:.04em;
+    display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  }
+  @media (max-width:640px){
+    .sheet{padding:26px 20px 32px;}
+    header.top h1{font-size:22px;}
+    ol.options{grid-template-columns:1fr;}
+    .body-row{flex-direction:column;gap:16px;}
+    figure.fig{align-self:center;}
+  }
+  @media print{
+    body{background:#fff;padding:0;}
+    .sheet{box-shadow:none;border:none;border-radius:0;padding:0;max-width:none;}
+    .q{page-break-inside:avoid;}
+    details.answers{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header class="top">
+    <h1>错题整理</h1>
+    <p class="meta">四年级数学 · 来源 WechatIMG4</p>
+  </header>
+
+  <div class="summary">
+    <span>共 5 道</span>
+    <span>选择 1 道</span>
+    <span>填空 3 道</span>
+    <span>简答 1 道</span>
+    <span>已去除作答与批改痕迹</span>
+  </div>
+
+  <!-- ============ 错题 1 ============ -->
+  <article class="q">
+    <div class="q-head">
+      <span class="badge">原卷 第2题（1）</span>
+      <span class="type">选择</span>
+    </div>
+
+    <p class="stem">
+      <span class="num">1.</span>
+      四位小伙伴估算了“28×43”，下面估算结果最接近计算结果的是（<span class="u"></span>）。
+    </p>
+
+    <ol class="options">
+      <li><span class="k">A.</span><span>小亚估：30×43</span></li>
+      <li><span class="k">B.</span><span>小亚估：20×43</span></li>
+      <li><span class="k">C.</span><span>小胖估：28×40</span></li>
+      <li><span class="k">D.</span><span>小丁丁估：28×50</span></li>
+    </ol>
+
+    <div class="work">
+      <div class="lbl">我的思路 / 作答</div>
+      <div class="lines"><i></i><i></i><i></i></div>
+    </div>
+  </article>
+
+  <!-- ============ 错题 2 ============ -->
+  <article class="q">
+    <div class="q-head">
+      <span class="badge">原卷 第3题（3）</span>
+      <span class="type">填空</span>
+    </div>
+
+    <p class="stem">
+      <span class="num">2.</span>
+      小丁丁的爸爸骑摩拜单车半小时行了 6000 米，他骑车速度是（<span class="u long"></span>）。
+    </p>
+
+    <div class="work">
+      <div class="lbl">我的计算过程 / 作答</div>
+      <div class="lines"><i></i><i></i><i></i></div>
+    </div>
+  </article>
+
+  <!-- ============ 错题 3 ============ -->
+  <article class="q">
+    <div class="q-head">
+      <span class="badge">原卷 第3题（4）</span>
+      <span class="type">填空</span>
+    </div>
+
+    <p class="stem">
+      <span class="num">3.</span>
+      如果 ★ 表示一个四位数，▲ 表示一个两位数，★×▲ 最小是（<span class="u short"></span>）；
+      如果 ★ 表示最大四位数，▲ 表示最大两位数，★÷▲ 是（<span class="u short"></span>）。
+    </p>
+
+    <div class="work">
+      <div class="lbl">我的思路 / 作答</div>
+      <div class="lines"><i></i><i></i><i></i></div>
+    </div>
+  </article>
+
+  <!-- ============ 错题 4 ============ -->
+  <article class="q">
+    <div class="q-head">
+      <span class="badge">原卷 第3题（5）①</span>
+      <span class="type">填空 · 组算式</span>
+    </div>
+
+    <p class="stem">
+      <span class="num">4.</span>
+      用数卡 <b>2、4、5、6</b> 四张数卡，按要求组成算式，并算出得数。<br>
+      ① 两位数乘两位数，积末尾有两个 0。
+    </p>
+
+    <div class="cards" aria-label="两位数乘两位数的算式填空">
+      <span class="slot"></span><span class="slot"></span>
+      <span class="op">×</span>
+      <span class="slot"></span><span class="slot"></span>
+      <span class="op">=</span>
+      <span class="op">（</span><span class="u-inline"></span><span class="op">）</span>
+    </div>
+
+    <div class="work">
+      <div class="lbl">我的思路 / 作答</div>
+      <div class="lines"><i></i><i></i></div>
+    </div>
+  </article>
+
+  <!-- ============ 错题 5 ============ -->
+  <article class="q">
+    <div class="q-head">
+      <span class="badge">原卷 第3题（6）</span>
+      <span class="type">简答 · 含竖式图</span>
+    </div>
+
+    <p class="stem">
+      <span class="num">5.</span>
+      观察下面三道除法竖式，在求商时：
+    </p>
+
+    <div class="figrow">
+      <figure class="fig">
+        <svg width="86" height="112" viewBox="0 0 86 112" role="img" aria-label="80 除以 20 的竖式">
+          <g font-family="'Songti SC','STSong','SimSun',serif" fill="#1f2328">
+            <text x="48" y="22" font-size="15">4</text>
+            <text x="16" y="48" font-size="15">20</text>
+            <text x="33" y="48" font-size="15">)</text>
+            <text x="40" y="48" font-size="15">80</text>
+            <line x1="37" y1="30" x2="62" y2="30" stroke="#1f2328" stroke-width="1.2"/>
+            <text x="40" y="68" font-size="15">80</text>
+            <line x1="37" y1="74" x2="62" y2="74" stroke="#1f2328" stroke-width="1.2"/>
+            <text x="48" y="94" font-size="15">0</text>
+            <text x="34" y="110" font-size="10" fill="#8d8778">题①</text>
+          </g>
+        </svg>
+      </figure>
+
+      <figure class="fig">
+        <svg width="92" height="112" viewBox="0 0 92 112" role="img" aria-label="154 除以 22 的竖式">
+          <g font-family="'Songti SC','STSong','SimSun',serif" fill="#1f2328">
+            <text x="62" y="22" font-size="15">7</text>
+            <text x="12" y="48" font-size="15">22</text>
+            <text x="29" y="48" font-size="15">)</text>
+            <text x="36" y="48" font-size="15">154</text>
+            <line x1="33" y1="30" x2="72" y2="30" stroke="#1f2328" stroke-width="1.2"/>
+            <text x="36" y="68" font-size="15">154</text>
+            <line x1="33" y1="74" x2="72" y2="74" stroke="#1f2328" stroke-width="1.2"/>
+            <text x="62" y="94" font-size="15">0</text>
+            <text x="40" y="110" font-size="10" fill="#8d8778">题②</text>
+          </g>
+        </svg>
+      </figure>
+
+      <figure class="fig">
+        <svg width="212" height="118" viewBox="0 0 212 118" role="img"
+             aria-label="192 除以 24 的竖式：初商 9 偏大，调商为 8">
+          <g font-family="'Songti SC','STSong','SimSun',serif" fill="#1f2328">
+            <!-- 试商 9 -->
+            <text x="58" y="22" font-size="15">9</text>
+            <text x="8" y="48" font-size="15">24</text>
+            <text x="25" y="48" font-size="15">)</text>
+            <text x="32" y="48" font-size="15">192</text>
+            <line x1="29" y1="30" x2="66" y2="30" stroke="#1f2328" stroke-width="1.2"/>
+            <text x="32" y="68" font-size="15">216</text>
+            <line x1="29" y1="74" x2="66" y2="74" stroke="#1f2328" stroke-width="1.2"/>
+            <text x="12" y="94" font-size="9" fill="#8c3b2a">216&gt;192，商大了</text>
+
+            <text x="96" y="56" font-size="15" fill="#4a5056">→</text>
+
+            <!-- 调商 8 -->
+            <text x="178" y="22" font-size="15">8</text>
+            <text x="128" y="48" font-size="15">24</text>
+            <text x="145" y="48" font-size="15">)</text>
+            <text x="152" y="48" font-size="15">192</text>
+            <line x1="149" y1="30" x2="186" y2="30" stroke="#1f2328" stroke-width="1.2"/>
+            <text x="152" y="68" font-size="15">192</text>
+            <line x1="149" y1="74" x2="186" y2="74" stroke="#1f2328" stroke-width="1.2"/>
+            <text x="178" y="94" font-size="15">0</text>
+            <text x="156" y="112" font-size="10" fill="#8d8778">题③</text>
+          </g>
+        </svg>
+      </figure>
+    </div>
+
+    <p class="stem" style="margin-top:18px;">
+      相同点是（<span class="u long"></span>）<br>
+      不同点是（<span class="u long"></span>）
+    </p>
+
+    <div class="work">
+      <div class="lbl">我的思路 / 作答</div>
+      <div class="lines"><i></i><i></i><i></i><i></i></div>
+    </div>
+  </article>
+
+  <!-- ============ 参考答案（默认折叠） ============ -->
+  <details class="answers">
+    <summary>参考答案与思路（点击展开，打印时自动隐藏）</summary>
+    <div class="inner">
+      <dl>
+        <dt>第 1 题（原卷 2(1)） · 答案 C</dt>
+        <dd>
+          先算准确值：28×43 = 1204。<br>
+          A：30×43 = 1290，相差 86；B：20×43 = 860，相差 344；<br>
+          C：28×40 = 1120，相差 84；D：28×50 = 1400，相差 196。<br>
+          相差最小的 C 最接近，故选 <b>C</b>。<br>
+          <span style="color:#8c3b2a">易错点：</span>估算是否“接近”，要比一比估算值与准确值的差，
+          不能只看哪个数“好看”。
+        </dd>
+
+        <dt>第 2 题（原卷 3(3)） · 答案 200 米/分（每分钟 200 米）</dt>
+        <dd>
+          半小时 = 30 分，速度 = 路程 ÷ 时间 = 6000 ÷ 30 = 200（米/分），也可写成 12 千米/时。<br>
+          <span style="color:#8c3b2a">易错点：</span>
+          ① 把“半小时”当成 2 分钟，用 6000 ÷ 2 去算；
+          ② 只写数字不写单位，或单位与时间不匹配；
+          ③ 忘记“速度 = 路程 ÷ 时间”。
+        </dd>
+
+        <dt>第 3 题（原卷 3(4)） · 答案 10000；101</dt>
+        <dd>
+          ① 最小的四位数是 1000，最小的两位数是 10，★×▲ 最小 = 1000×10 = <b>10000</b>。<br>
+          ② 最大四位数 9999，最大两位数 99，9999 ÷ 99 = <b>101</b>。<br>
+          <span style="color:#8c3b2a">易错点：</span>题目问“最小是（　）”，要填<b>具体数值</b>（10000），
+          而不是填它的位数（五位数）。位数只能说明范围，不能当作答案。
+        </dd>
+
+        <dt>第 4 题（原卷 3(5)①） · 答案 64×25 = 1600（或 25×64 = 1600）</dt>
+        <dd>
+          四张数卡 2、4、5、6 各用一次；把 5 放在一个因数末尾、4 放在另一个因数末尾，
+          得到 25 与 64（或 64 与 25），25×64 = 1600，积的末尾正好有两个 0。<br>
+          <span style="color:#8c3b2a">易错点：</span>
+          ① 数卡重复使用或漏用；② 只算得数，没检查“积末尾有两个 0”这个条件；
+          ③ 得数多写或少写一个 0。
+        </dd>
+
+        <dt>第 5 题（原卷 3(6)） · 相同点与不同点</dt>
+        <dd>
+          <b>相同点：</b>除数都是两位数，商都是一位数，而且都能整除（余数都是 0）；
+          求商时都先把除数看作与它接近的整十数去试商。<br>
+          <b>不同点：</b>除数不同（20、22、24）；题①、②一次试商就成功，
+          题③除数 24 看作 20 试商，初商 9 偏大（24×9 = 216 &gt; 192），需要<b>调商</b>成 8。<br>
+          <span style="color:#8c3b2a">易错点：</span>只写“都能除尽”“除数不一样”这类表面区别，
+          没有说到“试商 / 调商”这个关键；描述相同点要抓除法本身的规律，而不是数字是否相同。
+        </dd>
+      </dl>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <span>整理自 WechatIMG4 试卷 · 已清除学生手写答案与红笔批改符号</span>
+    <span>共 5 题</span>
+  </footer>
+
+</div>
+</body>
+</html>
