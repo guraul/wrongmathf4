@@ -14,6 +14,15 @@ describe("答案归一化", () => {
     expect(normalizeAnswer("4 平方公里")).toBe("4km2");
   });
 
+  it("全角拉丁字母也降为半角", () => {
+    expect(normalizeAnswer("１３．３２ｃｍ²")).toBe("13.32cm2");
+  });
+
+  it("㎢ 认作平方千米，不是平方分米", () => {
+    expect(compareAnswers("4㎢", "4 km²")).toBe("equal");
+    expect(compareAnswers("4㎢", "4 dm²")).toBe("differ");
+  });
+
   it("去掉空白与句末标点", () => {
     expect(normalizeAnswer(" 200 米/分 ")).toBe("200m/分");
     expect(normalizeAnswer("13.32cm²。")).toBe("13.32cm2");

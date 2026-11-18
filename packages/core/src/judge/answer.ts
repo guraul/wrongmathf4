@@ -5,11 +5,9 @@
  * 直接字符串相等会大面积误判，所以先归一化再比。
  */
 
-const FULLWIDTH_DIGITS = "０１２３４５６７８９";
-
 const UNIT_ALIASES: Array<[RegExp, string]> = [
   [/平方厘米|cm2|cm\^2|㎠/gi, "cm2"],
-  [/平方分米|dm2|dm\^2|㎢/gi, "dm2"],
+  [/平方分米|dm2|dm\^2/gi, "dm2"],
   [/平方米|m2|m\^2|㎡/gi, "m2"],
   [/平方千米|平方公里|km2|km\^2|㎢/gi, "km2"],
   [/公顷|ha/gi, "ha"],
@@ -24,7 +22,9 @@ export function normalizeAnswer(input: string): string {
   let s = input.trim();
 
   // 全角数字与符号 → 半角
-  s = s.replace(/[０-９]/g, (ch) => String(FULLWIDTH_DIGITS.indexOf(ch)));
+  // 全角 ASCII 整段降半角（ｃｍ → cm、０-９ → 0-9）
+  s = s.replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0));
+  s = s.replace(/\u3000/g, " ");
   s = s.replace(/[（]/g, "(").replace(/[）]/g, ")");
   s = s.replace(/[．。]/g, ".");
   s = s.replace(/[，,]/g, "");
