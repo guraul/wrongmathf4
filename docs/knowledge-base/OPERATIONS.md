@@ -56,6 +56,17 @@ scripts/pipeline/merge-pr.sh --pr <n> --record <记录> --root .
 `.dsh/pipeline.json` 里 `checks.packages` 决定 `check-all` 在哪些包装跑检查，当前是
 `packages/core` 与 `packages/web`。
 
+## 知识库 stamp 的语义
+
+页眉两行里的 `commit` 指**内容所对齐的代码提交**，不是写文档那天。
+
+这带来一个不可避免的现象：**同一个 PR 里既改代码又改文档时，`kb check --strict` 在 PR 内一定报 stale**
+——stamp 只能指向 base 提交，而覆盖路径恰好在本 PR 里变了。所以：
+
+- PR 内以 `kb check`（非 strict）退 0 为准，并确认 stale 项都是本次有意改动的文档
+- 合并后立刻用一个 docs-only 的小 PR 把 stamp 重打到合并提交，`--strict` 才回到 0 stale
+- 长期方案是把本仓加进 DSH 的「知识库日更队列巡检」，由它每天重打
+
 ## 部署（M7）
 
 - systemd 单服务，`ExecStart` 跑 `packages/web` 的 Next standalone 产物，端口 `PORT`

@@ -75,4 +75,8 @@ describe("放大尺寸", () => {
   it("倍数小于 1 时按 1 处理，不缩小", () => {
     expect(targetSize(1080, 1920, { scale: 0.5 })).toEqual({ width: 1080, height: 1920 });
   });
+
+  it("原图长边已超过上限时，按上限收缩（控制 token）", () => {
+    expect(targetSize(4000, 2000)).toEqual({ width: 3000, height: 1500 });
+  });
 });

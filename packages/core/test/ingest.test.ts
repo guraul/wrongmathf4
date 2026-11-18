@@ -1,10 +1,13 @@
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, it } from "vitest";
 
 import { loadImage, prepareForModel } from "../src/ingest/io.js";
 import { redMask } from "../src/ingest/pixels.js";
 
-const PAGE_1 = "test/fixtures/2026-11-17/p1-geo5.jpg";
-const PAGE_2 = "test/fixtures/2026-11-17/p2-geo6.jpg";
+const FIXTURES = fileURLToPath(new URL("../../../test/fixtures/2026-11-17/", import.meta.url));
+const PAGE_1 = `${FIXTURES}p1-geo5.jpg`;
+const PAGE_2 = `${FIXTURES}p2-geo6.jpg`;
 
 describe("读图", () => {
   it("解出原始像素尺寸", async () => {
@@ -23,9 +26,9 @@ describe("红笔掩膜（真实卷面）", () => {
     const img = await loadImage(path);
     const { ratio } = redMask(img);
 
-    // 卷面上的红笔大约占 0.5%–3%，超出这个范围说明阈值漂了
+    // 实测第一页 0.6%、第二页 1.1%；留到 0.4%–3%，阈值漂 3 倍就红
     expect(ratio).toBeGreaterThan(0.004);
-    expect(ratio).toBeLessThan(0.15);
+    expect(ratio).toBeLessThan(0.03);
   });
 });
 
