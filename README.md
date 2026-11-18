@@ -142,12 +142,10 @@ wrongmathf4/
 ├── core/                      # 共享逻辑
 │   ├── services/
 │   │   ├── image_preprocessor.py
-│   │   ├── ocr_service.py     # 旧 DeepSeek-OCR（保留）
 │   │   └── file_processor.py
 │   └── utils/
 ├── servers/
 │   ├── web_app.py             # FastAPI Web UI
-│   └── mcp.py                 # MCP stdio（旧模式）
 └── output/                    # 生成结果
 ```
 

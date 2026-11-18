@@ -157,7 +157,6 @@ wrongmathf4/
       "command": [
         "python3",
         "-m",
-        "servers.mcp"
       ],
       "enabled": true,
       "environment": {
