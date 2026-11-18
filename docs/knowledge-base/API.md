@@ -1,6 +1,6 @@
 # API.md — 接口清单
 
-> 最后更新: 2026-11-18 | commit: `f433969`
+> 最后更新: 2026-11-18 | commit: `9c14f7d`
 > 覆盖路径: `packages/web/app/page.tsx`
 
 ## 状态

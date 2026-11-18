@@ -1,0 +1,25 @@
+{
+  "source": "2026-11-17",
+  "note": "人工核对的结论：两张卷子共 2 道错题。用于 golden 回归。",
+  "wrong": [
+    {
+      "originalNo": "一（2）",
+      "kind": "geometry",
+      "answer": "13.32 cm²",
+      "why": "三角形 4.2×2÷2=4.2，梯形 (2.6+5)×2.4÷2=9.12，合计 13.32；学生写 7.92"
+    },
+    {
+      "originalNo": "二.1",
+      "kind": "unitFill",
+      "answer": "km²",
+      "why": "顾村公园占地约 4 km²（=400 公顷）；学生写 ha"
+    }
+  ],
+  "correct": [
+    { "originalNo": "一（1）", "answer": "39 cm²" },
+    { "originalNo": "一（3）", "answer": "116 cm²" },
+    { "originalNo": "一（4）", "answer": "49.5 dm²" },
+    { "originalNo": "二.2", "answer": "m²" },
+    { "originalNo": "二.3", "answer": "m, m, ha" }
+  ]
+}

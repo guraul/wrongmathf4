@@ -1,7 +1,7 @@
 # INDEX.md — 项目知识库索引总览
 
-> 最后更新: 2026-11-18 | commit: `f433969`
-> 覆盖路径: `package.json`, `pnpm-workspace.yaml`, `.dsh/pipeline.json`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/web/app/page.tsx`
+> 最后更新: 2026-11-18 | commit: `9c14f7d`
+> 覆盖路径: `package.json`, `pnpm-workspace.yaml`, `.dsh/pipeline.json`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/vlm/client.ts`, `packages/web/app/page.tsx`
 
 ## 使用说明
 
@@ -26,13 +26,13 @@
 
 ## 当前阶段
 
-**M1（图像输入）已完成**。识别、判定、渲染尚未开始；V1 的 Python 代码仍在仓内运行，按计划在 M2–M7 逐段替换。
+**M2（识别 + 三票判定）已完成**（真机回归待配 `DEEPSEEK_API_KEY`）。渲染与界面尚未开始；V1 的 Python 代码仍在仓内运行，按计划在 M3–M7 逐段替换。
 
 | 能力 | 状态 |
 |---|---|
 | 批次/页面/题目/图形四类契约 | 现行（`packages/core/src/schema.ts`） |
 | 图片放大、红笔掩膜 | 现行（`packages/core/src/ingest/`） |
-| 模型识别 + 三票判定 | 目标（M2） |
+
 | HTML 复刻渲染 | 目标（M3–M4） |
 | 上传/列表/预览/下载界面 | 目标（M5） |
 
@@ -77,8 +77,8 @@ wrongmathf4/
 |---|---|---|
 | 契约 | `packages/core/src/schema.ts` | 四类数据的 zod 定义与类型导出 |
 | 图像输入 | `packages/core/src/ingest/` | 摆正、放大、红笔掩膜 |
-| 识别 | `packages/core/src/vlm/`（待建） | 图片 → 结构化题目 |
-| 判定 | `packages/core/src/judge/`（待建） | 红笔 / 独立求解 / 规则校验三票 |
+| 识别 | `packages/core/src/vlm/` | 图片 → 结构化题目（两轮：转写 / 独立求解） |
+| 判定 | `packages/core/src/judge/` | 三票收敛、答案比对、掩膜聚类与对账 |
 | 渲染 | `packages/core/src/render/`（待建） | 结构化数据 → HTML |
 | 图形 | `packages/core/src/figures/`（待建） | 参数 → SVG |
 | 接口 | `packages/web/app/api/`（待建） | 上传、查询、下载 |
@@ -90,6 +90,8 @@ wrongmathf4/
 |---|---|
 | 跑测试 | `pnpm test` |
 | 看红笔掩膜 | `pnpm mask <图片> <输出.png>` |
+| 跑判定报告 | `pnpm judge <图片> [--mask <图片>]` |
+| 离线复算判定 | `pnpm judge --replay <RawPage.json> --mask <图片>` |
 | 类型检查 | `pnpm typecheck` |
 | 本地起界面 | `pnpm dev`（端口见 OPERATIONS） |
 | 建任务分支 | `scripts/pipeline/new-task.sh <issue号>` |
