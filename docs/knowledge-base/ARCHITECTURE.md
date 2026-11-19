@@ -1,6 +1,6 @@
 # ARCHITECTURE.md — 管线与判定
 
-> 最后更新: 2026-11-18 | commit: `e14aabe`
+> 最后更新: 2026-11-18 | commit: `1558691`
 > 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/ingest/io.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/judge/answer.ts`, `packages/core/src/render/html.ts`, `packages/core/src/render/figures.ts`, `packages/core/src/vlm/client.ts`
 
 ## 五段管线
@@ -27,7 +27,14 @@
 所以转写跑两轮，按题号对齐逐题投票：两轮一致直接采用；不一致补第三轮，两票多数决；
 **三轮各不同 → `none`**。选 `none` 是保守：判 unknown 只是让人多看一眼，误判成错会让学生多做一道题。
 
-正文取「题数最多」的那轮的并集（某轮漏题不该丢题），标记取所有轮次的多数决。
+正文取「题数最多」的那轮，标记取所有能对上的轮次的多数决。
+
+**怎么把两轮的题对上**：按相似度做动态规划对齐，既不是按题号也不是按位置。
+题干先归一化（全角转半角、去标点空白）再算二元组 Dice 相似度，与题号是否一致加权成
+`0.85 × 题干相似度 + 0.15 × 题号一致`，超过 0.5 才算同一题。
+
+三种情况都要能处理：编号写法在轮次间会变（`一（1）` 与 `1`）、某轮漏一道题、某轮把一行拆成两行。
+按题号对齐会让整页翻倍（真机实测 4 题变 8 题）；按位置对齐一遇漏题就整体错位。
 
 ### 模型调用的口径
 
