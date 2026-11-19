@@ -44,16 +44,30 @@ describe("模型客户端", () => {
     expect((init.headers as Record<string, string>)["x-opencode-session"]).toBe("wrongmath-local");
   });
 
-  it("只有 DeepSeek 才发 response_format，opencode go 不发", () => {
-    const go = fakeFetch("{}");
-    void new VlmClient({ apiKey: "k", fetchImpl: go }).transcribe("data:image/png;base64,AAA");
+  it("只有 DeepSeek 才发 response_format，opencode go 不发", async () => {
+    const body = JSON.stringify({
+      questions: [{ originalNo: "1", kind: "fill", stem: "x", teacherMark: "none" }],
+    });
+
+    const go = fakeFetch(body);
+    await new VlmClient({ apiKey: "k", fetchImpl: go }).transcribe("data:image/png;base64,AAA");
     const goBody = JSON.parse(String((go.mock.calls[0]?.[1] as RequestInit).body));
     expect(goBody.response_format).toBeUndefined();
 
-    const ds = fakeFetch("{}");
-    void new VlmClient({ apiKey: "k", provider: "deepseek", fetchImpl: ds }).transcribe("data:image/png;base64,AAA");
+    const ds = fakeFetch(body);
+    await new VlmClient({ apiKey: "k", provider: "deepseek", fetchImpl: ds }).transcribe("data:image/png;base64,AAA");
     const dsBody = JSON.parse(String((ds.mock.calls[0]?.[1] as RequestInit).body));
     expect(dsBody.response_format).toEqual({ type: "json_object" });
+  });
+
+  it("deepseek 路径不吃 opencode 的 session 头", () => {
+    const client = new VlmClient({
+      apiKey: "k",
+      provider: "deepseek",
+      sessionId: "should-be-ignored",
+      fetchImpl: fakeFetch("{}"),
+    });
+    expect(client.headers["x-opencode-session"]).toBeUndefined();
   });
 
   it("切到 deepseek 官方时不带 session 头", () => {

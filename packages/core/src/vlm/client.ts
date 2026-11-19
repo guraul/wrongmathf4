@@ -69,10 +69,11 @@ export class VlmClient {
     this.apiKey = opts.apiKey;
     this.endpoint = opts.endpoint ?? preset.endpoint;
     this.model = opts.model ?? preset.model;
-    this.headers = {
-      ...preset.headers,
-      ...(opts.sessionId !== undefined ? { "x-opencode-session": opts.sessionId } : {}),
-    };
+    this.headers = { ...preset.headers };
+    // session 头只有 opencode go 认，别的提供方就算传了也不加
+    if (opts.sessionId !== undefined && "x-opencode-session" in this.headers) {
+      this.headers["x-opencode-session"] = opts.sessionId;
+    }
     this.jsonMode = preset.jsonMode;
     this.fetchImpl = opts.fetchImpl ?? fetch;
     this.timeoutMs = opts.timeoutMs ?? 60_000;
