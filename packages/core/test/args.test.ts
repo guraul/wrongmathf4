@@ -38,4 +38,13 @@ describe("judge 参数解析", () => {
   it("什么都不给报错", () => {
     expect(() => parseArgs([])).toThrow(UsageError);
   });
+
+  it("同一个 flag 给两次报错，不静默覆盖", () => {
+    expect(() => parseArgs(["a.jpg", "--mask", "m1.jpg", "--mask", "m2.jpg"])).toThrow(/给了两次/);
+  });
+
+  it("空字符串路径报错，不要走到文件系统才失败", () => {
+    expect(() => parseArgs([""])).toThrow(/不能为空/);
+    expect(() => parseArgs(["a.jpg", "--mask", ""])).toThrow(/缺少取值/);
+  });
 });

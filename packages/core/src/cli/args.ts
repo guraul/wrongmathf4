@@ -22,19 +22,23 @@ export function parseArgs(argv: string[]): JudgeArgs {
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
+    if (arg === undefined) break;
 
     if (arg === "--replay" || arg === "--mask") {
       const value = argv[i + 1];
-      if (value === undefined || value.startsWith("--")) {
+      if (value === undefined || value.startsWith("--") || value === "") {
         throw new UsageError(`${arg} 后面缺少取值`);
       }
-      if (arg === "--replay") result.replay = value;
-      else result.maskPath = value;
+
+      const key = arg === "--replay" ? "replay" : "maskPath";
+      if (result[key] !== undefined) throw new UsageError(`${arg} 给了两次`);
+      result[key] = value;
       i += 1;
       continue;
     }
 
     if (arg.startsWith("--")) throw new UsageError(`未知参数 ${arg}`);
+    if (arg === "") throw new UsageError("图片路径不能为空");
     if (result.image !== undefined) throw new UsageError(`只接受一个图片参数，多出：${arg}`);
     result.image = arg;
   }
