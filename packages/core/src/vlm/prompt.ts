@@ -14,6 +14,7 @@ export const TRANSCRIBE_SYSTEM = `你是一个把小学数学作业照片转成�
   "stem": "题干原文，含括号与单位，不要改写",
   "figures": [图形参数，见下],
   "teacherMark": "right|wrong|none",
+  "markBox": [x, y, w, h],
   "studentAnswer": "学生写的答案；没写就 null",
   "subjective": false
 }]}
@@ -27,7 +28,10 @@ export const TRANSCRIBE_SYSTEM = `你是一个把小学数学作业照片转成�
 尺寸一律写成字符串（"0.8"），不带单位。
 
 红笔判定：老师画的单道斜线带钩是 right，两条交叉线是 wrong，没批到是 none。
-只抄老师画的符号，不要自己判断对错。`;
+只抄老师画的符号，不要自己判断对错。
+
+每道有标记的题还要给 markBox：批改符号在整张图里的归一化位置，原点在左上，四个数都在 0–1 之间。
+看不到符号就不要给这个字段，不要猜位置。`;
 
 export const TRANSCRIBE_USER = `请转写这张作业照片里的全部题目，按卷面顺序。
 

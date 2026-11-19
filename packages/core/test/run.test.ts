@@ -18,6 +18,7 @@ function page(mark: "wrong" | "right"): RawPage {
         stem: "求下列组合图形的面积。（单位：cm）",
         figures: [{ type: "composite", layout: "stack", unit: "cm", parts: [{ shape: "rect", width: "2", height: "3" }] }],
         teacherMark: mark,
+        markBox: null,
         studentAnswer: "7.92 cm²",
         subjective: false,
       },

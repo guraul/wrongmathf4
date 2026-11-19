@@ -11,6 +11,7 @@ function page(entries: Array<[string, string]>): RawPage {
       stem,
       figures: [],
       teacherMark: "right" as const,
+      markBox: null,
       studentAnswer: null,
       subjective: false,
     })),

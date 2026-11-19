@@ -28,6 +28,14 @@ export const RawQuestion = z.object({
    * 否则两轮都漏读同一道 ✗ 题时会被当成老师没批，漏判成 right。
    */
   teacherMark: RawMark.nullish().transform((v) => v ?? "unread"),
+  /**
+   * 老师批改符号在图上的归一化位置 [x, y, w, h]（0–1，原点左上）。
+   * 只用来和红笔掩膜对账，不参与渲染；看不到符号就不给。
+   */
+  markBox: z
+    .tuple([z.number(), z.number(), z.number(), z.number()])
+    .nullish()
+    .transform((v) => v ?? null),
   /** 学生写在这道题的答案；没作答留 null */
   studentAnswer: z.string().nullable().default(null),
   /** 说理、比较类题目 */
