@@ -165,7 +165,8 @@ describe("模型回包容错", () => {
       ],
     });
 
-    expect(parsed.questions[0]).toMatchObject({ originalNo: "", stem: "", teacherMark: "none", figures: [] });
+    // 缺失的标记记成 unread（没读到），不是 none（读到了没有标记）
+    expect(parsed.questions[0]).toMatchObject({ originalNo: "", stem: "", teacherMark: "unread", figures: [] });
     // 空编号的条目在去重时被丢掉
     expect(dedupePage(parsed).questions.map((q) => q.originalNo)).toEqual(["二.1"]);
   });
@@ -306,5 +307,37 @@ describe("评审指出的两个边界场景", () => {
     ]);
     expect(merged.page.questions).toHaveLength(1);
     expect(merged.page.questions[0]?.teacherMark).toBe("wrong");
+  });
+});
+
+describe("没读到 vs 没有标记", () => {
+  it("unread 是弃权票，不参与多数决的分母", () => {
+    expect(voteMarks(["right", "unread"]).mark).toBe("right");
+    expect(voteMarks(["wrong", "unread"]).mark).toBe("wrong");
+  });
+
+  it("两票都 unread 时判 none（保守），不会被凑成多数", () => {
+    expect(voteMarks(["unread", "unread"]).mark).toBe("none");
+  });
+
+  it("三票里一票 unread、两票冲突时仍然按有效票判平", () => {
+    expect(voteMarks(["wrong", "right", "unread"]).mark).toBe("none");
+  });
+
+  it("原始票里保留 unread，便于排查", () => {
+    expect(voteMarks(["right", "unread"]).votes).toEqual(["right", "unread"]);
+  });
+});
+
+describe("去重键用完整题干", () => {
+  it("前 24 字相同但后面不同的题干不会被并成一条", () => {
+    const long = "在括号内填入合适的数，并说说你的理由，这道题有三个空需要填写";
+    const merged = mergeRuns([
+      page([
+        ["一", "right", `${long}甲`],
+        ["一", "right", `${long}乙`],
+      ]),
+    ]);
+    expect(merged.page.questions).toHaveLength(2);
   });
 });
