@@ -3,6 +3,7 @@ import { loadImage } from "../ingest/io.js";
 import { redMask } from "../ingest/pixels.js";
 import { clusterMask } from "../judge/cluster.js";
 import { transcribeWithConsensus } from "../judge/consensus.js";
+import { verifyMarks } from "../judge/ink.js";
 import { buildQuestions } from "../judge/pipeline.js";
 import { repairStems } from "../judge/stem.js";
 import { renderWorksheet, type RenderOptions } from "../render/html.js";
@@ -38,11 +39,17 @@ export async function runPage(
 
   const solver = await client.solve(repaired.page.questions);
 
-  // 红笔簇数从掩膜真算：模型说有标记、掩膜一个红像素都没有时要降置信
+  // 红笔簇数与逐题复核：模型说"这里打了个叉"，框里得有红笔才算
   const img = await loadImage(imagePath);
-  const foundClusters = clusterMask(redMask(img).mask, img.width, img.height).length;
+  const { mask } = redMask(img);
+  const foundClusters = clusterMask(mask, img.width, img.height).length;
 
-  const { questions } = buildQuestions({ page: repaired.page, solver, foundClusters });
+  const verified = verifyMarks(repaired.page, mask, img.width, img.height);
+  if (verified.demoted.length > 0) {
+    opts.onProgress?.(`${verified.demoted.length} 处标记在框里没找到红笔，已按"没批到"处理`);
+  }
+
+  const { questions } = buildQuestions({ page: verified.page, solver, foundClusters });
 
   // 把投票与补题的来龙去脉记进 evidence，排查「为什么这题被判 none」时有据可查
   return questions.map((q, index) => {
@@ -50,6 +57,8 @@ export async function runPage(
     const evidence: Record<string, unknown> = { ...q.evidence };
     if (verdict !== undefined && verdict.votes.includes("unread")) evidence.markUnread = true;
     if (repaired.inherited.includes(q.originalNo)) evidence.stemInherited = true;
+    if (verified.demoted.includes(q.originalNo)) evidence.markUnverified = true;
+    if (verified.noBox.includes(q.originalNo)) evidence.markNoBox = true;
     return { ...q, evidence };
   });
 }
