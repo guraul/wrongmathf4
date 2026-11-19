@@ -26,10 +26,7 @@ export function markKey(originalNo: string): string {
 }
 
 /**
- * 题目的完整对齐键 = 规范化题号 + 题干前缀。
- *
- * 只按题号对齐会误伤：同一页里「二.1」（单位题）和「二（1）」（选择题）可能真的是两道题，
- * 题干不同就必须分开；题干相同才是同一道题的不同写法。
+ * 题目的完整对齐键 = 规范化题号 + 题干前缀，用于去重（不做跨轮对齐）。
  */
 export function questionKey(q: { originalNo: string; stem: string }): string {
   return `${markKey(q.originalNo)}#${normalizeStem(q.stem).slice(0, 24)}`;
@@ -111,11 +108,11 @@ export function mergeRuns(runs: RawPage[]): ConsensusResult {
 
   const votes = new Map<string, Verdict3>();
 
-  const merged = spine.questions.map((q) => {
+  const merged = spine.questions.map((q, index) => {
     const marks: TeacherMark[] = [q.teacherMark];
 
     for (const run of others) {
-      const twin = findTwin(q, spine, run);
+      const twin = findTwin(q, index, spine, run);
       if (twin !== null) marks.push(twin.teacherMark);
     }
 
@@ -129,7 +126,10 @@ export function mergeRuns(runs: RawPage[]): ConsensusResult {
   const extra: RawQuestion[] = [];
   const used = new Set(merged.map((q) => questionKey(q)));
 
-  for (const run of cleaned) {
+  for (const run of others) {
+    // 题数相同 = 已经按位置对齐完，不能再把这一轮整页当成"新题"补回来
+    if (run.questions.length === spine.questions.length) continue;
+
     for (const q of run.questions) {
       if (spineNumbers.has(markKey(q.originalNo))) continue;
       const key = questionKey(q);
@@ -150,8 +150,20 @@ export function mergeRuns(runs: RawPage[]): ConsensusResult {
   return { page: { questions: [...merged, ...extra] }, votes, spineIndex };
 }
 
-/** 在另一轮里找同一道题：同号唯一就直接认，同号多题才按题干、最后按顺序 */
-function findTwin(target: RawQuestion, spine: RawPage, run: RawPage): RawQuestion | null {
+/**
+ * 在另一轮里找同一道题。
+ *
+ * 第一优先是**位置**：同一张图按顺序转写，第 n 题对第 n 题最稳。
+ * 真机上两轮的编号写法会变（`一（1）` 与 `1` 混着来），只按题号对齐会把整页当成两套题，
+ * 三轮 4 题直接膨胀成 8–9 题。
+ *
+ * 只有在两轮题数不同（漏题或某轮把一行拆成两行）时，才退回题号 → 题干 → 顺序。
+ */
+function findTwin(target: RawQuestion, index: number, spine: RawPage, run: RawPage): RawQuestion | null {
+  if (run.questions.length === spine.questions.length) {
+    return (run.questions[index] ?? null) as RawQuestion | null;
+  }
+
   const number = markKey(target.originalNo);
   const sameNumber = run.questions.filter((q) => markKey(q.originalNo) === number);
 
