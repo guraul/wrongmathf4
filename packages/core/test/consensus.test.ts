@@ -109,11 +109,14 @@ describe("多轮合并", () => {
     expect(merged.page.questions.find((q) => q.originalNo === "一（1）")?.teacherMark).toBe("right");
   });
 
-  it("某轮漏掉的题在正文里仍保留", () => {
-    const run1 = page([["一（2）", "wrong"]]);
+  it("某轮少了一题时，多出来的那题仍保留", () => {
+    const run1 = page([
+      ["一（1）", "right"],
+      ["一（2）", "wrong"],
+    ]);
     const run2 = page([["一（1）", "right"]]);
     const merged = mergeRuns([run1, run2]);
-    expect(merged.page.questions.map((q) => q.originalNo).sort()).toEqual(["一（1）", "一（2）"]);
+    expect(merged.page.questions.map((q) => q.originalNo)).toEqual(["一（1）", "一（2）"]);
   });
 
   it("空输入直接报错", () => {
@@ -165,5 +168,143 @@ describe("模型回包容错", () => {
     expect(parsed.questions[0]).toMatchObject({ originalNo: "", stem: "", teacherMark: "none", figures: [] });
     // 空编号的条目在去重时被丢掉
     expect(dedupePage(parsed).questions.map((q) => q.originalNo)).toEqual(["二.1"]);
+  });
+});
+
+describe("题干有出入时的对齐", () => {
+  const runA = page([
+    ["一（1）", "right", "求下列组合图形的面积。（单位：cm）"],
+    ["一（2）", "wrong", "求下列组合图形的面积。（单位：cm）"],
+    ["一（3）", "right", "求下列组合图形的面积。（单位：cm）"],
+    ["一（4）", "right", "求下面图形的面积。（单位：dm）"],
+  ]);
+  const runB = page([
+    ["一（1）", "right", "求下列组合图形的面积(单位:cm)"],
+    ["一（2）", "wrong", "求下列组合图形的面积（单位：cm）。"],
+    ["一（3）", "right", "求下列组合图形的面积。（单位：cm）"],
+    ["一（4）", "wrong", "求下面图形的面积（单位：dm）"],
+  ]);
+  const runC = page([
+    ["一（1）", "right", "求组合图形面积（单位：cm）"],
+    ["一（2）", "wrong", "求组合图形面积（单位：cm）"],
+    ["一（3）", "right", "求组合图形面积（单位：cm）"],
+    ["一（4）", "right", "求组合图形面积（单位：dm）"],
+  ]);
+
+  it("三轮都是 4 题，合并后仍是 4 题（不会因为题干出入翻倍）", () => {
+    const merged = mergeRuns([runA, runB, runC]);
+    expect(merged.page.questions).toHaveLength(4);
+  });
+
+  it("一（4）两票 right 一票 wrong，多数决为 right", () => {
+    const merged = mergeRuns([runA, runB, runC]);
+    expect(merged.page.questions.find((q) => q.originalNo === "一（4）")?.teacherMark).toBe("right");
+  });
+
+  it("题干出入也能识别出真正的分歧", () => {
+    expect(hasDisagreement([runA, runB, runC])).toBe(true);
+    const calm = [runA, runA, runA];
+    expect(hasDisagreement(calm)).toBe(false);
+  });
+});
+
+describe("同号多题（填空行）", () => {
+  const make = (marks: Array<"right" | "wrong">) => ({
+    questions: marks.map((teacherMark, i) => ({
+      originalNo: "一",
+      kind: "unitFill" as const,
+      stem: `第 ${i + 1} 行填空`,
+      figures: [],
+      teacherMark,
+      studentAnswer: null,
+      subjective: false,
+    })),
+  });
+
+  it("6 条同号不同题干不会被并成一条", () => {
+    const merged = mergeRuns([make(["right", "wrong", "right", "right", "right", "right"])]);
+    expect(merged.page.questions).toHaveLength(6);
+  });
+
+  it("两轮同号多题按顺序配对投票", () => {
+    const merged = mergeRuns([
+      make(["right", "wrong", "right"]),
+      make(["right", "wrong", "right"]),
+    ]);
+    expect(merged.page.questions).toHaveLength(3);
+    expect(merged.page.questions.map((q) => q.teacherMark)).toEqual(["right", "wrong", "right"]);
+  });
+});
+
+describe("两轮编号写法不同", () => {
+  const runA = page([
+    ["一（1）", "right", "求下列组合图形的面积。（单位：cm）"],
+    ["一（2）", "wrong", "求下列组合图形的面积。（单位：cm）"],
+    ["一（3）", "right", "求下列组合图形的面积。（单位：cm）"],
+    ["一（4）", "right", "求下面图形的面积。（单位：dm）"],
+  ]);
+  const runB = page([
+    ["1", "right", "求组合图形面积(单位:cm)"],
+    ["2", "wrong", "求组合图形面积（单位：cm）"],
+    ["3", "right", "求组合图形面积（单位:cm)"],
+    ["4", "right", "求下面图形面积（单位：dm）"],
+  ]);
+
+  it("按位置对齐，不会因为编号写法不同翻倍", () => {
+    const merged = mergeRuns([runA, runB]);
+    expect(merged.page.questions).toHaveLength(4);
+  });
+
+  it("标记取两轮投票，正文用底稿", () => {
+    const merged = mergeRuns([runA, runB]);
+    expect(merged.page.questions.map((q) => q.teacherMark)).toEqual(["right", "wrong", "right", "right"]);
+    expect(merged.page.questions[0]?.originalNo).toBe("一（1）");
+  });
+});
+
+describe("评审指出的两个边界场景", () => {
+  const full = page([
+    ["一（1）", "right", "求下列组合图形的面积。（单位：cm）"],
+    ["一（2）", "wrong", "求下列组合图形的面积。（单位：cm）"],
+    ["一（3）", "right", "求下列组合图形的面积。（单位：cm）"],
+    ["一（4）", "right", "求下面图形的面积。（单位：dm）"],
+  ]);
+
+  it("题数不同 + 编号写法不同，不会把整页当新题追加", () => {
+    // 另一轮漏掉一道，而且编号写成 1/2/3
+    const short = page([
+      ["1", "right", "求组合图形面积(单位:cm)"],
+      ["2", "wrong", "求组合图形面积（单位：cm）"],
+      ["3", "right", "求组合图形面积（单位：cm）"],
+    ]);
+
+    const merged = mergeRuns([full, short]);
+    expect(merged.page.questions).toHaveLength(4);
+    expect(merged.page.questions.map((q) => q.teacherMark)).toEqual(["right", "wrong", "right", "right"]);
+  });
+
+  it("等题数但中间漏一题、末尾拆一条，不会整体错位投票", () => {
+    const shifted = page([
+      ["一（1）", "right", "求下列组合图形的面积。（单位：cm）"],
+      ["一（3）", "right", "求下列组合图形的面积。（单位：cm）"],
+      ["一（4）", "right", "求下面图形的面积。（单位：dm）"],
+      ["一（4）补", "right", "另起一行再问一次面积（单位：dm）"],
+    ]);
+
+    const merged = mergeRuns([full, shifted]);
+    // 一（2）只有底稿这一票，标记不被别的题污染
+    expect(merged.page.questions[1]?.originalNo).toBe("一（2）");
+    expect(merged.page.questions[1]?.teacherMark).toBe("wrong");
+    // 多出来的那条不会丢
+    expect(merged.page.questions.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("题干几乎一样但编号读错时，按同一题合并（不丢题也不翻倍）", () => {
+    const merged = mergeRuns([
+      page([["一（2）", "wrong", "求下列组合图形的面积。（单位：cm）"]]),
+      page([["一（1）", "wrong", "求下列组合图形的面积（单位：cm）"]]),
+    ]);
+    expect(merged.page.questions).toHaveLength(1);
+    expect(merged.page.questions[0]?.teacherMark).toBe("wrong");
   });
 });
