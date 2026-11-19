@@ -1,12 +1,19 @@
 import { RawPage, SolverOutput, type RawQuestion } from "./parse.js";
+import { PROVIDERS, type ProviderId } from "./providers.js";
 import { TRANSCRIBE_SYSTEM, TRANSCRIBE_USER, solveSystem, solveUser } from "./prompt.js";
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
 export interface VlmOptions {
   apiKey: string;
-  baseUrl?: string;
+  /** 提供方预设；默认 opencode go */
+  provider?: ProviderId;
+  /** 覆盖预设里的完整端点 */
+  endpoint?: string;
+  /** 覆盖预设里的模型 id */
   model?: string;
+  /** 覆盖 x-opencode-session（opencode go 必填头） */
+  sessionId?: string;
   /** 注入用：测试里换成假的 fetch，不打网络 */
   fetchImpl?: FetchLike;
   timeoutMs?: number;
@@ -34,18 +41,40 @@ export function extractJson(text: string): unknown {
   return JSON.parse(body.slice(start, end + 1));
 }
 
+/** 把各家的错误体压成一行：opencode go 是 {"error":{"message":...}}，DeepSeek 是 {"error":{"message":...}} 或纯文本 */
+function explainError(body: string): string {
+  try {
+    const parsed = JSON.parse(body) as { error?: { message?: string; type?: string } };
+    const message = parsed.error?.message;
+    if (typeof message === "string") return message;
+  } catch {
+    // 不是 JSON，原样截断
+  }
+  return body.slice(0, 200);
+}
+
 export class VlmClient {
   private readonly apiKey: string;
-  private readonly baseUrl: string;
-  private readonly model: string;
+  readonly endpoint: string;
+  readonly model: string;
+  readonly headers: Record<string, string>;
+  readonly jsonMode: boolean;
   private readonly fetchImpl: FetchLike;
   private readonly timeoutMs: number;
   private readonly maxTokens: number;
 
   constructor(opts: VlmOptions) {
+    const preset = PROVIDERS[opts.provider ?? "opencode-go"];
+
     this.apiKey = opts.apiKey;
-    this.baseUrl = (opts.baseUrl ?? "https://api.deepseek.com").replace(/\/$/, "");
-    this.model = opts.model ?? "deepseek-flash";
+    this.endpoint = opts.endpoint ?? preset.endpoint;
+    this.model = opts.model ?? preset.model;
+    this.headers = { ...preset.headers };
+    // session 头只有 opencode go 认，别的提供方就算传了也不加
+    if (opts.sessionId !== undefined && "x-opencode-session" in this.headers) {
+      this.headers["x-opencode-session"] = opts.sessionId;
+    }
+    this.jsonMode = preset.jsonMode;
     this.fetchImpl = opts.fetchImpl ?? fetch;
     this.timeoutMs = opts.timeoutMs ?? 60_000;
     this.maxTokens = opts.maxTokens ?? 4_000;
@@ -56,24 +85,25 @@ export class VlmClient {
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
 
     try {
-      const res = await this.fetchImpl(`${this.baseUrl}/chat/completions`, {
+      const res = await this.fetchImpl(this.endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${this.apiKey}`,
+          ...this.headers,
         },
         body: JSON.stringify({
           model: this.model,
           messages,
           max_tokens: this.maxTokens,
-          response_format: { type: "json_object" },
+          ...(this.jsonMode ? { response_format: { type: "json_object" } } : {}),
         }),
         signal: controller.signal,
       });
 
       if (!res.ok) {
         const detail = await res.text().catch(() => "");
-        throw new Error(`模型调用失败 HTTP ${res.status}: ${detail.slice(0, 200)}`);
+        throw new Error(`模型调用失败 HTTP ${res.status}（${this.model}）: ${explainError(detail)}`);
       }
 
       const data = (await res.json()) as {

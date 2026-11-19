@@ -1,11 +1,12 @@
 /**
  * 判定调试命令：跑「读图 → 识别 → 独立求解 → 三票判定」，打印 JSON 报告。
  *
- *   pnpm judge test/fixtures/2026-11-17/p1-geo5.jpg            # 需要 DEEPSEEK_API_KEY
+ *   pnpm judge test/fixtures/2026-11-17/p1-geo5.jpg            # 需要 OPENCODE_GO_API_KEY 或 DEEPSEEK_API_KEY
  *   pnpm judge --replay /tmp/page.json --mask test/.../p1.jpg  # 离线复算，不打网络
  */
 import { readFile } from "node:fs/promises";
 
+import { loadEnv } from "../env.js";
 import { prepareForModel } from "../ingest/io.js";
 import { loadImage } from "../ingest/io.js";
 import { redMask } from "../ingest/pixels.js";
@@ -13,6 +14,7 @@ import { clusterMask } from "../judge/cluster.js";
 import { buildQuestions, wrongQuestions } from "../judge/pipeline.js";
 import { RawPage } from "../vlm/parse.js";
 import { VlmClient } from "../vlm/client.js";
+import { resolveProvider } from "../vlm/providers.js";
 
 function usage(): never {
   console.error("用法: judge <图片> [--mask <图片>] | judge --replay <RawPage.json> [--mask <图片>]");
@@ -44,15 +46,21 @@ if (replayIdx >= 0) {
   const imagePath = positional[0];
   if (!imagePath) usage();
 
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  if (!apiKey) {
-    console.error("缺少 DEEPSEEK_API_KEY；离线复算请用 --replay <RawPage.json>");
+  loadEnv();
+  const resolved = resolveProvider();
+  if (!resolved.ok) {
+    console.error(`${resolved.reason}；离线复算请用 --replay <RawPage.json>`);
     process.exit(2);
   }
 
   const prepared = await prepareForModel(imagePath);
   const dataUrl = `data:image/png;base64,${prepared.buffer.toString("base64")}`;
-  const client = new VlmClient({ apiKey });
+  const client = new VlmClient({
+    apiKey: resolved.value.apiKey,
+    provider: resolved.value.preset.id,
+    // 调试用：指向自建代理或临时端点
+    ...(process.env.WM_ENDPOINT ? { endpoint: process.env.WM_ENDPOINT } : {}),
+  });
 
   page = await client.transcribe(dataUrl);
   const solver = await client.solve(page.questions);

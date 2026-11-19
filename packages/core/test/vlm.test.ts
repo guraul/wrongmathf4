@@ -31,6 +31,62 @@ function requestBody(fetchImpl: ReturnType<typeof fakeFetch>): Record<string, an
 }
 
 describe("模型客户端", () => {
+  it("默认走 opencode go：端点、模型与 session 头都对", () => {
+    const fetchImpl = fakeFetch(JSON.stringify({ questions: [{ originalNo: "1", kind: "fill", stem: "x", teacherMark: "none" }] }));
+    const client = new VlmClient({ apiKey: "k", fetchImpl });
+
+    expect(client.endpoint).toBe("https://opencode.ai/inference/go/openai/v1/chat/completions");
+    expect(client.model).toBe("deepseek-v4.1-flash");
+    expect(client.headers["x-opencode-session"]).toBe("wrongmath-local");
+
+    void client.transcribe("data:image/png;base64,AAA");
+    const init = fetchImpl.mock.calls[0]?.[1] as RequestInit;
+    expect((init.headers as Record<string, string>)["x-opencode-session"]).toBe("wrongmath-local");
+  });
+
+  it("只有 DeepSeek 才发 response_format，opencode go 不发", async () => {
+    const body = JSON.stringify({
+      questions: [{ originalNo: "1", kind: "fill", stem: "x", teacherMark: "none" }],
+    });
+
+    const go = fakeFetch(body);
+    await new VlmClient({ apiKey: "k", fetchImpl: go }).transcribe("data:image/png;base64,AAA");
+    const goBody = JSON.parse(String((go.mock.calls[0]?.[1] as RequestInit).body));
+    expect(goBody.response_format).toBeUndefined();
+
+    const ds = fakeFetch(body);
+    await new VlmClient({ apiKey: "k", provider: "deepseek", fetchImpl: ds }).transcribe("data:image/png;base64,AAA");
+    const dsBody = JSON.parse(String((ds.mock.calls[0]?.[1] as RequestInit).body));
+    expect(dsBody.response_format).toEqual({ type: "json_object" });
+  });
+
+  it("deepseek 路径不吃 opencode 的 session 头", () => {
+    const client = new VlmClient({
+      apiKey: "k",
+      provider: "deepseek",
+      sessionId: "should-be-ignored",
+      fetchImpl: fakeFetch("{}"),
+    });
+    expect(client.headers["x-opencode-session"]).toBeUndefined();
+  });
+
+  it("切到 deepseek 官方时不带 session 头", () => {
+    const client = new VlmClient({ apiKey: "k", provider: "deepseek", fetchImpl: fakeFetch("{}") });
+    expect(client.endpoint).toBe("https://api.deepseek.com/chat/completions");
+    expect(client.model).toBe("deepseek-flash");
+    expect(client.headers["x-opencode-session"]).toBeUndefined();
+  });
+
+  it("错误体里的 message 会被提取出来", async () => {
+    const fetchImpl = vi.fn(async (_input: string, _init?: RequestInit) =>
+      new Response(JSON.stringify({ error: { type: "authentication_error", message: "Invalid credential" } }), {
+        status: 401,
+      }),
+    );
+    const client = new VlmClient({ apiKey: "k", fetchImpl });
+    await expect(client.transcribe("data:image/png;base64,AAA")).rejects.toThrow(/Invalid credential/);
+  });
+
   it("转写时把图放进 user 消息，并要求 original 细节", async () => {
     const fetchImpl = fakeFetch(
       JSON.stringify({

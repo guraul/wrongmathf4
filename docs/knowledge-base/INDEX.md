@@ -1,6 +1,6 @@
 # INDEX.md — 项目知识库索引总览
 
-> 最后更新: 2026-11-18 | commit: `992e23e`
+> 最后更新: 2026-11-18 | commit: `04b4928`
 > 覆盖路径: `package.json`, `pnpm-workspace.yaml`, `.dsh/pipeline.json`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/render/html.ts`, `packages/core/src/render/figures.ts`, `packages/core/src/vlm/client.ts`, `packages/web/app/page.tsx`
 
 ## 使用说明
@@ -90,7 +90,7 @@ wrongmathf4/
 |---|---|
 | 跑测试 | `pnpm test` |
 | 看红笔掩膜 | `pnpm mask <图片> <输出.png>` |
-| 跑判定报告 | `pnpm judge <图片> [--mask <图片>]` |
+| 跑判定报告 | `pnpm judge <图片> [--mask <图片>]`（需 `OPENCODE_GO_API_KEY`） |
 | 离线复算判定 | `pnpm judge --replay <RawPage.json> --mask <图片>` |
 | 渲染复刻卷 | `pnpm render <questions.json> <输出.html>` |
 | 类型检查 | `pnpm typecheck` |
