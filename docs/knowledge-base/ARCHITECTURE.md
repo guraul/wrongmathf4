@@ -1,6 +1,6 @@
 # ARCHITECTURE.md — 管线与判定
 
-> 最后更新: 2026-11-18 | commit: `992e23e`
+> 最后更新: 2026-11-18 | commit: `04b4928`
 > 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/ingest/io.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/judge/answer.ts`, `packages/core/src/render/html.ts`, `packages/core/src/render/figures.ts`, `packages/core/src/vlm/client.ts`
 
 ## 五段管线
@@ -13,6 +13,14 @@
         │        └─ DeepSeek Flash，放大后送图，每页两轮
         └─ PDF→PNG、EXIF 旋转、放大 2–3 倍、红笔颜色掩膜
 ```
+
+### 模型调用的口径
+
+提供方预设集中在 `vlm/providers.ts`，换提供方只改这张表。当前默认 **opencode go** 的 `deepseek-v4.1-flash`
+（它的 modalities 含 jpeg/png/webp，图片链路可用），备用 DeepSeek 官方 `deepseek-flash`。
+
+两次调用共用同一个客户端：第一次给图（`detail: "original"`，`low` 会把图压到 512×512 把小字磨掉），
+第二次只给题干与图形参数。对外失败一律抛出、不静默降级——判定宁可停，不可拿错结果继续。
 
 ### 图形的口径
 

@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { prepareForModel } from "../src/ingest/io.js";
 import { buildQuestions, wrongQuestions } from "../src/judge/pipeline.js";
 import { VlmClient } from "../src/vlm/client.js";
+import { resolveProvider } from "../src/vlm/providers.js";
 
 const FIXTURES = fileURLToPath(new URL("../../../test/fixtures/2026-11-17/", import.meta.url));
 
@@ -17,10 +18,16 @@ interface Expected {
  * 真机回归：需要有 DEEPSEEK_API_KEY。没 key 时整组跳过，不让 CI 变红。
  * 判据只看「错题编号集合」——题干转写的措辞差异交给人工看图。
  */
-describe.skipIf(!process.env.DEEPSEEK_API_KEY)("golden：2026-11-17 两张卷子", () => {
+const provider = resolveProvider();
+
+describe.skipIf(!provider.ok)("golden：2026-11-17 两张卷子", () => {
   it("错题集合与人工结论一致", async () => {
     const expected = JSON.parse(await readFile(`${FIXTURES}expected.json`, "utf8")) as Expected;
-    const client = new VlmClient({ apiKey: process.env.DEEPSEEK_API_KEY as string });
+    const client = new VlmClient(
+      provider.ok
+        ? { apiKey: provider.value.apiKey, provider: provider.value.preset.id }
+        : { apiKey: "skipped" },
+    );
 
     const found = new Set<string>();
 

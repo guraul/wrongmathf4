@@ -1,6 +1,6 @@
 # OPERATIONS.md — 运行、部署与踩坑
 
-> 最后更新: 2026-11-18 | commit: `992e23e`
+> 最后更新: 2026-11-18 | commit: `04b4928`
 > 覆盖路径: `packages/web/next.config.mjs`, `.dsh/pipeline.json`, `pnpm-workspace.yaml`, `packages/core/src/ingest/io.ts`, `packages/core/src/cli/mask.ts`
 
 ## 环境变量
@@ -8,7 +8,22 @@
 | 变量 | 缺省 | 用途 |
 |---|---|---|
 | `PORT` | `19238` | Web 端口（`packages/web` 的 dev/start 读它） |
-| `DEEPSEEK_API_KEY` | 无 | 模型调用，**当前未配置**；缺失时 `pnpm judge` 会提示改用 `--replay` |
+| `OPENCODE_GO_API_KEY` | 无 | **默认提供方** opencode go 的 key（也认 `OPENCODE_API_KEY`） |
+| `DEEPSEEK_API_KEY` | 无 | 备用：DeepSeek 官方接口 |
+| `WM_PROVIDER` | 自动 | 强制指定 `opencode-go` / `deepseek`，写了不存在的值直接报错 |
+
+模型提供方与 key 的对应关系：
+
+| 提供方 | 端点 | 模型 | 取 key |
+|---|---|---|---|
+| `opencode-go`（默认） | `https://opencode.ai/inference/go/openai/v1/chat/completions` | `deepseek-v4.1-flash` | `OPENCODE_GO_API_KEY` → `OPENCODE_API_KEY` |
+| `deepseek` | `https://api.deepseek.com/chat/completions` | `deepseek-flash` | `DEEPSEEK_API_KEY` |
+
+选法：`WM_PROVIDER` 有值就用它（缺 key 直接报错，不静默换），否则按上表顺序找第一个配了 key 的。
+`.env` 由 `process.loadEnvFile()` 自动加载（Node 自带，不引 dotenv），文件不存在就跳过。
+
+**opencode go 必须带 `x-opencode-session` 请求头**，缺了返回 `MissingSessionID`；
+无 key 或 key 无效返回 401 `authentication_error: Invalid credential`（两者都实测过）。
 | `DB_PATH` | `data/wrongmath.db` | SQLite 路径（M5 起） |
 | `DATA_DIR` | `data/` | 上传件与产物根目录 |
 | `LOG_LEVEL` | `info` | 日志级别 |
