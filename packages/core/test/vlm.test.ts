@@ -77,6 +77,28 @@ describe("模型客户端", () => {
     expect(client.headers["x-opencode-session"]).toBeUndefined();
   });
 
+  it("默认预算与超时按真机实测设置", () => {
+    const client = new VlmClient({ apiKey: "k" });
+    expect(client.maxTokens).toBe(16_000);
+    expect(client.timeoutMs).toBe(300_000);
+  });
+
+  it("finish_reason=length 且无正文时，报错指出是预算被推理吃光", async () => {
+    const fetchImpl = vi.fn(async (_input: string, _init?: RequestInit) =>
+      new Response(
+        JSON.stringify({
+          choices: [
+            { finish_reason: "length", message: { role: "assistant", content: "", reasoning_content: "想了很久" } },
+          ],
+          usage: { completion_tokens_details: { reasoning_tokens: 12740 } },
+        }),
+        { status: 200 },
+      ),
+    );
+    const client = new VlmClient({ apiKey: "k", fetchImpl });
+    await expect(client.transcribe("data:image/png;base64,AAA")).rejects.toThrow(/finish_reason=length.*12740/);
+  });
+
   it("错误体里的 message 会被提取出来", async () => {
     const fetchImpl = vi.fn(async (_input: string, _init?: RequestInit) =>
       new Response(JSON.stringify({ error: { type: "authentication_error", message: "Invalid credential" } }), {
