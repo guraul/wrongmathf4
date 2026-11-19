@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./pipeline": "./src/pipeline/run.ts",
+    "./env": "./src/env.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

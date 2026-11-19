@@ -1,6 +1,6 @@
 # INDEX.md — 项目知识库索引总览
 
-> 最后更新: 2026-11-18 | commit: `4c5f5c6`
+> 最后更新: 2026-11-18 | commit: `e14aabe`
 > 覆盖路径: `package.json`, `pnpm-workspace.yaml`, `.dsh/pipeline.json`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/render/html.ts`, `packages/core/src/render/figures.ts`, `packages/core/src/vlm/client.ts`, `packages/web/app/page.tsx`
 
 ## 使用说明
@@ -26,7 +26,7 @@
 
 ## 当前阶段
 
-**M4（参数化图形）已完成**。界面尚未开始（M5）；V1 的 Python 代码仍在仓内运行，按计划在 M5–M7 逐段替换。
+**M5（上传界面）已完成**。剩下真机回归固化与切换（M6/M7）；V1 的 Python 代码仍在仓内运行。
 
 | 能力 | 状态 |
 |---|---|
@@ -93,6 +93,7 @@ wrongmathf4/
 | 跑判定报告 | `pnpm judge <图片> [--mask <图片>]`（需 `OPENCODE_GO_API_KEY`） |
 | 离线复算判定 | `pnpm judge --replay <RawPage.json> --mask <图片>` |
 | 渲染复刻卷 | `pnpm render <questions.json> <输出.html>` |
+| 起界面 | `pnpm dev`（http://localhost:19238） |
 | 类型检查 | `pnpm typecheck` |
 | 本地起界面 | `pnpm dev`（端口见 OPERATIONS） |
 | 建任务分支 | `scripts/pipeline/new-task.sh <issue号>` |

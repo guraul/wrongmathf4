@@ -6,3 +6,5 @@ export * from "./judge/pipeline.js";
 export * from "./judge/rules.js";
 export * from "./judge/verdict.js";
 export * from "./vlm/parse.js";
+export * from "./vlm/client.js";
+export * from "./vlm/providers.js";

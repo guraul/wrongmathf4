@@ -1,0 +1,46 @@
+import { prepareForModel } from "../ingest/io.js";
+import { loadImage } from "../ingest/io.js";
+import { redMask } from "../ingest/pixels.js";
+import { clusterMask } from "../judge/cluster.js";
+import { transcribeWithConsensus } from "../judge/consensus.js";
+import { buildQuestions } from "../judge/pipeline.js";
+import { renderWorksheet, type RenderOptions } from "../render/html.js";
+import type { Question } from "../schema.js";
+import type { VlmClient } from "../vlm/client.js";
+
+/**
+ * 一页的完整链路：预处理 → 两轮投票转写 → 独立求解 → 三票判定。
+ * Web 与 CLI 共用这一份，避免两边判断口径漂移。
+ */
+
+export interface RunPageOptions {
+  /** 进度回调，写日 visible 日志用 */
+  onProgress?: (message: string) => void;
+}
+
+export async function runPage(
+  imagePath: string,
+  client: VlmClient,
+  opts: RunPageOptions = {},
+): Promise<Question[]> {
+  const prepared = await prepareForModel(imagePath);
+  const dataUrl = `data:image/png;base64,${prepared.buffer.toString("base64")}`;
+
+  const consensus = await transcribeWithConsensus(() => client.transcribe(dataUrl), {
+    onRun: (index, page) => opts.onProgress?.(`第 ${index} 轮转写：${page.questions.length} 题`),
+  });
+  opts.onProgress?.(`采用 ${consensus.runs} 轮投票结果，共 ${consensus.page.questions.length} 题`);
+
+  const solver = await client.solve(consensus.page.questions);
+
+  // 红笔簇数从掩膜真算：模型说有标记、掩膜一个红像素都没有时要降置信
+  const img = await loadImage(imagePath);
+  const foundClusters = clusterMask(redMask(img).mask, img.width, img.height).length;
+
+  const { questions } = buildQuestions({ page: consensus.page, solver, foundClusters });
+  return questions;
+}
+
+export function renderBatch(questions: Question[], opts: RenderOptions = {}): string {
+  return renderWorksheet(questions, opts);
+}
