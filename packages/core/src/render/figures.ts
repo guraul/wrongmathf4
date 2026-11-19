@@ -1,5 +1,5 @@
 import type { Figure } from "../schema.js";
-import { escapeHtml } from "./html.js";
+import { escapeHtml } from "./escape.js";
 
 /**
  * 参数化图形：模型只报尺寸，坐标全部由这里算。
@@ -8,8 +8,6 @@ import { escapeHtml } from "./html.js";
 
 /** 1 个长度单位（cm）画多少像素 */
 const PX_PER_UNIT = 26;
-/** 图形四周留给尺寸标注的空间 */
-const PAD = 38;
 const LABEL_SIZE = 13;
 const STROKE = "#222";
 const SHAPE_FILL = "#f7f7f5";
@@ -19,13 +17,6 @@ const px = (dim: string): number => Number(dim) * PX_PER_UNIT;
 interface Size {
   w: number;
   h: number;
-}
-
-interface PartBox {
-  x: number;
-  y: number;
-  size: Size;
-  svg: string;
 }
 
 /** 带刻度的尺寸线：水平尺寸画在图形上方，竖直尺寸画在图形右侧。 */
@@ -74,17 +65,6 @@ function partShape(part: Part, box: { x: number; y: number; w: number; h: number
       const leftTop = x + (w - top) / 2;
       return `<polygon points="${x},${y + h} ${x + w},${y + h} ${leftTop + top},${y} ${leftTop},${y}" ${common}/>`;
     }
-  }
-}
-
-function partLabel(part: Part): string {
-  switch (part.shape) {
-    case "rect":
-      return `${part.width}×${part.height}`;
-    case "triangle":
-      return `底 ${part.base} 高 ${part.height}`;
-    case "trapezoid":
-      return `上 ${part.top} 下 ${part.bottom} 高 ${part.height}`;
   }
 }
 
@@ -183,7 +163,7 @@ function renderDivision(fig: Extract<Figure, { type: "division" }>): string {
   <path d="M ${bracketX} ${barY} L ${bracketX} ${dividendBaseline + 6}" fill="none" stroke="#222" stroke-width="1.6"/>
   <line x1="${bracketX}" y1="${barY}" x2="${width - 12}" y2="${barY}" stroke="#222" stroke-width="1.6"/>
   <text x="${dividendX}" y="${dividendBaseline}" font-size="17" fill="#222">${escapeHtml(dividendText)}</text>
-  <text x="${width - 12}" y="${quotientBaseline}" font-size="17" text-anchor="end" fill="#222">${escapeHtml(String(fig.quotient))}</text>
+  <text x="${dividendX + dividendText.length * charW}" y="${quotientBaseline}" font-size="17" text-anchor="end" fill="#222">${escapeHtml(String(fig.quotient))}</text>
   <text x="${dividendX}" y="${dividendBaseline + 30}" font-size="11" fill="#666">余 ${escapeHtml(String(fig.remainder))}</text>
 </svg>`;
 }

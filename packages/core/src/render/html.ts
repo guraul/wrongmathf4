@@ -18,7 +18,7 @@ export interface RenderOptions {
   title?: string;
   /** 副标题，如日期 */
   subtitle?: string;
-  /** 图形渲染器；M4 落地前默认输出占位框 */
+  /** 图形渲染器；默认走 renderFigure，测试里可替换 */
   figureRenderer?: (figure: Figure, index: number) => string;
   /** 每题下方留给答题的空白高度（px） */
   answerSpacePx?: number;
@@ -59,9 +59,6 @@ const STYLE = `
   .stem { margin: 0 0 6px; text-align: justify; }
   .no { margin-right: 6px; }
   .figures { margin: 6px 0 10px; text-align: center; }
-  .figure-placeholder {
-    display: inline-block; padding: 18px 28px; border: 1px dashed #bbb; color: #999; font-size: 10pt;
-  }
   .answer-space { border-bottom: 1px dotted #e2e2e2; }
   @media print { body { padding: 0; } .answer-space { border-bottom: none; } }
 `;
