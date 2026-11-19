@@ -88,15 +88,17 @@ export interface ConsensusResult {
 }
 
 /**
- * 把多轮转写合成一份：正文取题数最多的那轮（其次是最新的一轮），
- * 标记取所有轮次的多数决。
+ * 把多轮转写合成一份。
+ *
+ * 对齐是两级：同一题号在某轮只出现一次就按题号对齐；同号多次出现（一页里 6 个填空都叫「一」）
+ * 才退回题干匹配 + 顺序配对。只按「题号 + 题干前缀」对齐会让题干有点出入的同一道题变成两道，
+ * 真机上三轮 4 题直接膨胀成 9 题。
  */
 export function mergeRuns(runs: RawPage[]): ConsensusResult {
   if (runs.length === 0) throw new Error("至少要有一轮转写结果");
 
   const cleaned = runs.map(dedupePage);
 
-  // 正文以题数最多的那轮为底，再把其他轮里多出来的题补进来（某轮漏题不该丢题）
   let spineIndex = 0;
   for (let i = 1; i < cleaned.length; i++) {
     if ((cleaned[i] as RawPage).questions.length > (cleaned[spineIndex] as RawPage).questions.length) {
@@ -105,50 +107,73 @@ export function mergeRuns(runs: RawPage[]): ConsensusResult {
   }
 
   const spine = cleaned[spineIndex] as RawPage;
-  const questions: RawQuestion[] = [...spine.questions];
-  const seen = new Set(questions.map((q) => questionKey(q)));
-
-  for (const run of cleaned) {
-    for (const q of run.questions) {
-      const key = questionKey(q);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      questions.push(q);
-    }
-  }
+  const others = cleaned.filter((_, i) => i !== spineIndex);
 
   const votes = new Map<string, Verdict3>();
-  const merged = questions.map((q) => {
-    const key = questionKey(q);
-    const marks = cleaned
-      .map((run) => run.questions.find((x) => questionKey(x) === key))
-      .filter((x): x is RawQuestion => x !== undefined)
-      .map((x) => x.teacherMark);
+
+  const merged = spine.questions.map((q) => {
+    const marks: TeacherMark[] = [q.teacherMark];
+
+    for (const run of others) {
+      const twin = findTwin(q, spine, run);
+      if (twin !== null) marks.push(twin.teacherMark);
+    }
 
     const result = voteMarks(marks);
     votes.set(q.originalNo, result);
     return { ...q, teacherMark: result.mark };
   });
 
-  return { page: { questions: merged }, votes, spineIndex };
-}
+  // 底稿里完全没有的题号才补进来（同号只是题干有出入的，已经对齐掉了）
+  const spineNumbers = new Set(spine.questions.map((q) => markKey(q.originalNo)));
+  const extra: RawQuestion[] = [];
+  const used = new Set(merged.map((q) => questionKey(q)));
 
-/** 两轮里是否存在标记分歧 */
-export function hasDisagreement(runs: RawPage[]): boolean {
-  if (runs.length < 2) return false;
-
-  const byKey = new Map<string, TeacherMark[]>();
-  for (const run of runs) {
-    for (const q of dedupePage(run).questions) {
+  for (const run of cleaned) {
+    for (const q of run.questions) {
+      if (spineNumbers.has(markKey(q.originalNo))) continue;
       const key = questionKey(q);
-      const list = byKey.get(key) ?? [];
-      list.push(q.teacherMark);
-      byKey.set(key, list);
+      if (used.has(key)) continue;
+      used.add(key);
+      extra.push(q);
     }
   }
 
-  for (const marks of byKey.values()) {
-    if (new Set(marks).size > 1) return true;
+  for (const q of extra) {
+    const marks = cleaned
+      .map((run) => run.questions.find((x) => questionKey(x) === questionKey(q)))
+      .filter((x): x is RawQuestion => x !== undefined)
+      .map((x) => x.teacherMark);
+    votes.set(q.originalNo, voteMarks(marks));
+  }
+
+  return { page: { questions: [...merged, ...extra] }, votes, spineIndex };
+}
+
+/** 在另一轮里找同一道题：同号唯一就直接认，同号多题才按题干、最后按顺序 */
+function findTwin(target: RawQuestion, spine: RawPage, run: RawPage): RawQuestion | null {
+  const number = markKey(target.originalNo);
+  const sameNumber = run.questions.filter((q) => markKey(q.originalNo) === number);
+
+  if (sameNumber.length === 0) return null;
+  if (sameNumber.length === 1) return sameNumber[0] as RawQuestion;
+
+  const exact = sameNumber.find((q) => normalizeStem(q.stem) === normalizeStem(target.stem));
+  if (exact !== undefined) return exact;
+
+  // 同号多题且题干对不上：按该号在底稿里的第几个出现，去对另一轮的第几个
+  const indexInSpine = spine.questions.filter((q) => markKey(q.originalNo) === number).indexOf(target);
+  return (sameNumber[indexInSpine] ?? null) as RawQuestion | null;
+}
+
+/**
+ * 两轮里是否存在标记分歧。
+ * 必须和 mergeRuns 用同一套对齐，否则「同一题被当成两题」时分歧检测会漏。
+ */
+export function hasDisagreement(runs: RawPage[]): boolean {
+  if (runs.length < 2) return false;
+  for (const verdict of mergeRuns(runs).votes.values()) {
+    if (new Set(verdict.votes).size > 1) return true;
   }
   return false;
 }

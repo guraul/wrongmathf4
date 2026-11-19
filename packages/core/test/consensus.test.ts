@@ -167,3 +167,68 @@ describe("模型回包容错", () => {
     expect(dedupePage(parsed).questions.map((q) => q.originalNo)).toEqual(["二.1"]);
   });
 });
+
+describe("题干有出入时的对齐", () => {
+  const runA = page([
+    ["一（1）", "right", "求下列组合图形的面积。（单位：cm）"],
+    ["一（2）", "wrong", "求下列组合图形的面积。（单位：cm）"],
+    ["一（3）", "right", "求下列组合图形的面积。（单位：cm）"],
+    ["一（4）", "right", "求下面图形的面积。（单位：dm）"],
+  ]);
+  const runB = page([
+    ["一（1）", "right", "求下列组合图形的面积(单位:cm)"],
+    ["一（2）", "wrong", "求下列组合图形的面积（单位：cm）。"],
+    ["一（3）", "right", "求下列组合图形的面积。（单位：cm）"],
+    ["一（4）", "wrong", "求下面图形的面积（单位：dm）"],
+  ]);
+  const runC = page([
+    ["一（1）", "right", "求组合图形面积（单位：cm）"],
+    ["一（2）", "wrong", "求组合图形面积（单位：cm）"],
+    ["一（3）", "right", "求组合图形面积（单位：cm）"],
+    ["一（4）", "right", "求组合图形面积（单位：dm）"],
+  ]);
+
+  it("三轮都是 4 题，合并后仍是 4 题（不会因为题干出入翻倍）", () => {
+    const merged = mergeRuns([runA, runB, runC]);
+    expect(merged.page.questions).toHaveLength(4);
+  });
+
+  it("一（4）两票 right 一票 wrong，多数决为 right", () => {
+    const merged = mergeRuns([runA, runB, runC]);
+    expect(merged.page.questions.find((q) => q.originalNo === "一（4）")?.teacherMark).toBe("right");
+  });
+
+  it("题干出入也能识别出真正的分歧", () => {
+    expect(hasDisagreement([runA, runB, runC])).toBe(true);
+    const calm = [runA, runA, runA];
+    expect(hasDisagreement(calm)).toBe(false);
+  });
+});
+
+describe("同号多题（填空行）", () => {
+  const make = (marks: Array<"right" | "wrong">) => ({
+    questions: marks.map((teacherMark, i) => ({
+      originalNo: "一",
+      kind: "unitFill" as const,
+      stem: `第 ${i + 1} 行填空`,
+      figures: [],
+      teacherMark,
+      studentAnswer: null,
+      subjective: false,
+    })),
+  });
+
+  it("6 条同号不同题干不会被并成一条", () => {
+    const merged = mergeRuns([make(["right", "wrong", "right", "right", "right", "right"])]);
+    expect(merged.page.questions).toHaveLength(6);
+  });
+
+  it("两轮同号多题按顺序配对投票", () => {
+    const merged = mergeRuns([
+      make(["right", "wrong", "right"]),
+      make(["right", "wrong", "right"]),
+    ]);
+    expect(merged.page.questions).toHaveLength(3);
+    expect(merged.page.questions.map((q) => q.teacherMark)).toEqual(["right", "wrong", "right"]);
+  });
+});
