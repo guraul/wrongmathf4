@@ -18,6 +18,12 @@ export interface ProviderPreset {
   apiKeyEnv: string[];
   /** 固定附加的请求头 */
   headers: Record<string, string>;
+  /**
+   * 是否发送 response_format: json_object。
+   * DeepSeek 官方接口支持；opencode go 的网关没验证过，先关掉——
+   * 反正 extractJson 能从围栏和寒暄里抠出 JSON，不依赖这个开关。
+   */
+  jsonMode: boolean;
 }
 
 export const PROVIDERS: Record<ProviderId, ProviderPreset> = {
@@ -28,6 +34,7 @@ export const PROVIDERS: Record<ProviderId, ProviderPreset> = {
     model: "deepseek-v4.1-flash",
     apiKeyEnv: ["OPENCODE_GO_API_KEY", "OPENCODE_API_KEY"],
     headers: { "x-opencode-session": "wrongmath-local" },
+    jsonMode: false,
   },
   deepseek: {
     id: "deepseek",
@@ -36,6 +43,7 @@ export const PROVIDERS: Record<ProviderId, ProviderPreset> = {
     model: "deepseek-flash",
     apiKeyEnv: ["DEEPSEEK_API_KEY"],
     headers: {},
+    jsonMode: true,
   },
 };
 

@@ -6,5 +6,10 @@ import { existsSync } from "node:fs";
  */
 export function loadEnv(path = ".env"): void {
   if (!existsSync(path)) return;
-  process.loadEnvFile(path);
+  try {
+    process.loadEnvFile(path);
+  } catch (error) {
+    // 格式坏掉不该让整条命令崩在启动阶段：提示一行，继续用已有环境变量
+    console.warn(`[warn] 读取 ${path} 失败，已忽略：${(error as Error).message}`);
+  }
 }

@@ -22,6 +22,9 @@
 选法：`WM_PROVIDER` 有值就用它（缺 key 直接报错，不静默换），否则按上表顺序找第一个配了 key 的。
 `.env` 由 `process.loadEnvFile()` 自动加载（Node 自带，不引 dotenv），文件不存在就跳过。
 
+`response_format: json_object` 只对 DeepSeek 官方发送——opencode go 的网关没验证过是否支持，
+关掉它不影响解析（`extractJson` 自己会剥围栏找 JSON）。`WM_ENDPOINT` 可临时把请求指向别的端点。
+
 **opencode go 必须带 `x-opencode-session` 请求头**，缺了返回 `MissingSessionID`；
 无 key 或 key 无效返回 401 `authentication_error: Invalid credential`（两者都实测过）。
 | `DB_PATH` | `data/wrongmath.db` | SQLite 路径（M5 起） |

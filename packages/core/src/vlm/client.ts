@@ -58,6 +58,7 @@ export class VlmClient {
   readonly endpoint: string;
   readonly model: string;
   readonly headers: Record<string, string>;
+  readonly jsonMode: boolean;
   private readonly fetchImpl: FetchLike;
   private readonly timeoutMs: number;
   private readonly maxTokens: number;
@@ -72,6 +73,7 @@ export class VlmClient {
       ...preset.headers,
       ...(opts.sessionId !== undefined ? { "x-opencode-session": opts.sessionId } : {}),
     };
+    this.jsonMode = preset.jsonMode;
     this.fetchImpl = opts.fetchImpl ?? fetch;
     this.timeoutMs = opts.timeoutMs ?? 60_000;
     this.maxTokens = opts.maxTokens ?? 4_000;
@@ -93,7 +95,7 @@ export class VlmClient {
           model: this.model,
           messages,
           max_tokens: this.maxTokens,
-          response_format: { type: "json_object" },
+          ...(this.jsonMode ? { response_format: { type: "json_object" } } : {}),
         }),
         signal: controller.signal,
       });
