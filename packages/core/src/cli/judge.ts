@@ -16,8 +16,10 @@ import { buildQuestions, wrongQuestions } from "../judge/pipeline.js";
 import { RawPage } from "../vlm/parse.js";
 import { VlmClient } from "../vlm/client.js";
 import { resolveProvider } from "../vlm/providers.js";
+import { parseArgs, UsageError } from "./args.js";
 
-function usage(): never {
+function usage(reason?: string): never {
+  if (reason !== undefined) console.error(reason);
   console.error("用法: judge <图片> [--mask <图片>] | judge --replay <RawPage.json> [--mask <图片>]");
   process.exit(2);
 }
@@ -28,24 +30,26 @@ async function clusterCount(maskPath: string): Promise<number> {
   return clusterMask(mask, img.width, img.height).length;
 }
 
-const args = process.argv.slice(2);
-const replayIdx = args.indexOf("--replay");
-const maskIdx = args.indexOf("--mask");
+let parsed;
+try {
+  parsed = parseArgs(process.argv.slice(2));
+} catch (error) {
+  if (error instanceof UsageError) usage(error.message);
+  throw error;
+}
 
-const maskPath = maskIdx >= 0 ? args[maskIdx + 1] : undefined;
-const positional = args.filter((_, i) => i !== replayIdx && i !== replayIdx + 1 && i !== maskIdx && i !== maskIdx + 1);
+const maskPath = parsed.maskPath;
 
 let page: RawPage;
 let source: string;
 
-if (replayIdx >= 0) {
-  const file = args[replayIdx + 1];
-  if (!file) usage();
+if (parsed.replay !== undefined) {
+  const file = parsed.replay;
   page = RawPage.parse(JSON.parse(await readFile(file, "utf8")));
   source = `replay:${file}`;
 } else {
-  const imagePath = positional[0];
-  if (!imagePath) usage();
+  const imagePath = parsed.image;
+  if (imagePath === undefined) usage();
 
   loadEnv();
   const resolved = resolveProvider();
