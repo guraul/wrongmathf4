@@ -1,6 +1,6 @@
 # CONVENTIONS.md — 编码约定与红线
 
-> 最后更新: 2026-11-18 | commit: `1558691`
+> 最后更新: 2026-11-18 | commit: `c2667fc`
 > 覆盖路径: `tsconfig.base.json`, `vitest.config.ts`, `package.json`, `packages/core/src/ingest/pixels.ts`
 
 ## 代码
