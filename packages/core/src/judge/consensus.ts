@@ -32,8 +32,12 @@ export function questionKey(q: { originalNo: string; stem: string }): string {
   return `${markKey(q.originalNo)}#${normalizeStem(q.stem).slice(0, 24)}`;
 }
 
+/** 归一化题干：全角转半角、去掉标点与空白，只留汉字字母数字，再算相似度才稳 */
 function normalizeStem(stem: string): string {
-  return stem.replace(/\s+/g, "");
+  return stem
+    .replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+    .replace(/[^\p{Script=Han}A-Za-z0-9]/gu, "")
+    .toLowerCase();
 }
 
 /** 同一题号 + 同一题干的条目只保留第一条（模型偶尔会把一行填空拆成好几条） */
@@ -78,18 +82,109 @@ export function voteMarks(marks: TeacherMark[]): Verdict3 {
 
 export interface ConsensusResult {
   page: RawPage;
-  /** 每题最终采用的标记与原始票，进 evidence 用 */
-  votes: Map<string, Verdict3>;
+  /** 与 questions 一一对应的投票明细（同号多题不会互相覆盖） */
+  votes: Verdict3[];
   /** 题数最多的那一轮是正文来源 */
   spineIndex: number;
 }
 
+/** 两段文本的相似度：按二元组算 Sørensen–Dice，对 OCR 噪声比编辑距离宽容 */
+export function similarity(a: string, b: string): number {
+  const left = normalizeStem(a);
+  const right = normalizeStem(b);
+  if (left === "" && right === "") return 1;
+  if (left.length < 2 || right.length < 2) return left === right ? 1 : 0;
+
+  const grams = new Map<string, number>();
+  for (let i = 0; i < left.length - 1; i++) {
+    const g = left.slice(i, i + 2);
+    grams.set(g, (grams.get(g) ?? 0) + 1);
+  }
+
+  let hits = 0;
+  for (let i = 0; i < right.length - 1; i++) {
+    const g = right.slice(i, i + 2);
+    const count = grams.get(g) ?? 0;
+    if (count > 0) {
+      hits += 1;
+      grams.set(g, count - 1);
+    }
+  }
+
+  return (2 * hits) / (left.length - 1 + right.length - 1);
+}
+
 /**
- * 把多轮转写合成一份。
+ * 两道题是同一题的可能性。
  *
- * 对齐是两级：同一题号在某轮只出现一次就按题号对齐；同号多次出现（一页里 6 个填空都叫「一」）
- * 才退回题干匹配 + 顺序配对。只按「题号 + 题干前缀」对齐会让题干有点出入的同一道题变成两道，
- * 真机上三轮 4 题直接膨胀成 9 题。
+ * 题干权重高（抄下来的字最稳），题号只作为辅助信号：
+ * 模型会在不同轮次把同一题写成 `一（1）` 或 `1`，所以题号不同不能直接否定。
+ */
+export function questionScore(a: RawQuestion, b: RawQuestion): number {
+  const sameNumber = markKey(a.originalNo) === markKey(b.originalNo) ? 1 : 0;
+  // 题干占绝大部分权重：一页里同一大题下的小问常常共用题干，只能靠顺序区分；
+  // 而编号写法在轮次之间会变，只当辅助信号。
+  return 0.85 * similarity(a.stem, b.stem) + 0.15 * sameNumber;
+}
+
+/** 低于这个分就不认为是同一题 */
+const MATCH_THRESHOLD = 0.5;
+
+/**
+ * 用动态规划把一轮的题对齐到底稿上，允许两边都有空位。
+ *
+ * 这比「按题号找」「按位置找」都稳：漏一道题只会在中间空出一格，
+ * 不会让后面的题整体错位；编号写法变了也不影响，因为主要看题干。
+ */
+export function alignRun(spine: RawQuestion[], run: RawQuestion[]): {
+  pairs: Array<[number, number]>;
+  extra: number[];
+} {
+  const n = spine.length;
+  const m = run.length;
+  const dp: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
+
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      const gain = questionScore(spine[i - 1] as RawQuestion, run[j - 1] as RawQuestion) - MATCH_THRESHOLD;
+      const diagonal = gain > 0 ? (dp[i - 1]?.[j - 1] ?? 0) + gain : Number.NEGATIVE_INFINITY;
+      dp[i]![j] = Math.max(dp[i - 1]?.[j] ?? 0, dp[i]?.[j - 1] ?? 0, diagonal);
+    }
+  }
+
+  const pairs: Array<[number, number]> = [];
+  const matchedRun = new Set<number>();
+  let i = n;
+  let j = m;
+
+  while (i > 0 && j > 0) {
+    const gain = questionScore(spine[i - 1] as RawQuestion, run[j - 1] as RawQuestion) - MATCH_THRESHOLD;
+    const diagonal = gain > 0 ? (dp[i - 1]?.[j - 1] ?? 0) + gain : Number.NEGATIVE_INFINITY;
+    const current = dp[i]?.[j] ?? 0;
+
+    if (gain > 0 && Math.abs(current - diagonal) < 1e-9) {
+      pairs.push([i - 1, j - 1]);
+      matchedRun.add(j - 1);
+      i -= 1;
+      j -= 1;
+    } else if ((dp[i - 1]?.[j] ?? 0) >= (dp[i]?.[j - 1] ?? 0)) {
+      i -= 1;
+    } else {
+      j -= 1;
+    }
+  }
+
+  const extra: number[] = [];
+  for (let k = 0; k < m; k++) {
+    if (!matchedRun.has(k)) extra.push(k);
+  }
+
+  return { pairs: pairs.reverse(), extra };
+}
+
+/**
+ * 把多轮转写合成一份：正文取题数最多的那一轮，其余轮次按相似度对齐后投票。
+ * 对齐不上的题（另一轮多读出来的）追加到末尾。
  */
 export function mergeRuns(runs: RawPage[]): ConsensusResult {
   if (runs.length === 0) throw new Error("至少要有一轮转写结果");
@@ -106,88 +201,60 @@ export function mergeRuns(runs: RawPage[]): ConsensusResult {
   const spine = cleaned[spineIndex] as RawPage;
   const others = cleaned.filter((_, i) => i !== spineIndex);
 
-  const votes = new Map<string, Verdict3>();
+  const questions: RawQuestion[] = spine.questions.map((q) => ({ ...q }));
+  const votes: Verdict3[] = [];
 
-  const merged = spine.questions.map((q, index) => {
+  // 每轮对底稿的对齐结果，供投票与补题共用
+  const alignments = others.map((run) => alignRun(spine.questions, run.questions));
+
+  for (const [index, q] of spine.questions.entries()) {
     const marks: TeacherMark[] = [q.teacherMark];
 
-    for (const run of others) {
-      const twin = findTwin(q, index, spine, run);
-      if (twin !== null) marks.push(twin.teacherMark);
+    for (const [runIndex, run] of others.entries()) {
+      const pair = alignments[runIndex]?.pairs.find(([spineIdx]) => spineIdx === index);
+      if (pair === undefined) continue;
+      const twin = run.questions[pair[1]];
+      if (twin === undefined) continue;
+      marks.push(twin.teacherMark);
     }
 
     const result = voteMarks(marks);
-    votes.set(q.originalNo, result);
-    return { ...q, teacherMark: result.mark };
-  });
+    votes.push(result);
+    questions[index] = { ...q, teacherMark: result.mark };
+  }
 
-  // 底稿里完全没有的题号才补进来（同号只是题干有出入的，已经对齐掉了）
-  const spineNumbers = new Set(spine.questions.map((q) => markKey(q.originalNo)));
-  const extra: RawQuestion[] = [];
-  const used = new Set(merged.map((q) => questionKey(q)));
+  // 另一轮里对不上的题按顺序补进来，各自再用剩下几轮投票
+  for (const [runIndex, run] of others.entries()) {
+    const alignment = alignments[runIndex];
+    if (alignment === undefined) continue;
 
-  for (const run of others) {
-    // 题数相同 = 已经按位置对齐完，不能再把这一轮整页当成"新题"补回来
-    if (run.questions.length === spine.questions.length) continue;
+    for (const extraIndex of alignment.extra) {
+      const q = run.questions[extraIndex];
+      if (q === undefined) continue;
 
-    for (const q of run.questions) {
-      if (spineNumbers.has(markKey(q.originalNo))) continue;
-      const key = questionKey(q);
-      if (used.has(key)) continue;
-      used.add(key);
-      extra.push(q);
+      const marks: TeacherMark[] = [q.teacherMark];
+      for (const [otherIndex, otherRun] of others.entries()) {
+        if (otherIndex === runIndex) continue;
+        const twin = otherRun.questions.find((x) => questionScore(x, q) >= MATCH_THRESHOLD);
+        if (twin !== undefined) marks.push(twin.teacherMark);
+      }
+
+      const result = voteMarks(marks);
+      votes.push(result);
+      questions.push({ ...q, teacherMark: result.mark });
     }
   }
 
-  for (const q of extra) {
-    const marks = cleaned
-      .map((run) => run.questions.find((x) => questionKey(x) === questionKey(q)))
-      .filter((x): x is RawQuestion => x !== undefined)
-      .map((x) => x.teacherMark);
-    votes.set(q.originalNo, voteMarks(marks));
-  }
-
-  return { page: { questions: [...merged, ...extra] }, votes, spineIndex };
-}
-
-/**
- * 在另一轮里找同一道题。
- *
- * 第一优先是**位置**：同一张图按顺序转写，第 n 题对第 n 题最稳。
- * 真机上两轮的编号写法会变（`一（1）` 与 `1` 混着来），只按题号对齐会把整页当成两套题，
- * 三轮 4 题直接膨胀成 8–9 题。
- *
- * 只有在两轮题数不同（漏题或某轮把一行拆成两行）时，才退回题号 → 题干 → 顺序。
- */
-function findTwin(target: RawQuestion, index: number, spine: RawPage, run: RawPage): RawQuestion | null {
-  if (run.questions.length === spine.questions.length) {
-    return (run.questions[index] ?? null) as RawQuestion | null;
-  }
-
-  const number = markKey(target.originalNo);
-  const sameNumber = run.questions.filter((q) => markKey(q.originalNo) === number);
-
-  if (sameNumber.length === 0) return null;
-  if (sameNumber.length === 1) return sameNumber[0] as RawQuestion;
-
-  const exact = sameNumber.find((q) => normalizeStem(q.stem) === normalizeStem(target.stem));
-  if (exact !== undefined) return exact;
-
-  // 同号多题且题干对不上：按该号在底稿里的第几个出现，去对另一轮的第几个
-  const indexInSpine = spine.questions.filter((q) => markKey(q.originalNo) === number).indexOf(target);
-  return (sameNumber[indexInSpine] ?? null) as RawQuestion | null;
+  return { page: { questions }, votes, spineIndex };
 }
 
 /**
  * 两轮里是否存在标记分歧。
- * 必须和 mergeRuns 用同一套对齐，否则「同一题被当成两题」时分歧检测会漏。
+ * 与 mergeRuns 共用同一套对齐，避免「同一题被当成两题」时漏判分歧。
  */
 export function hasDisagreement(runs: RawPage[]): boolean {
   if (runs.length < 2) return false;
-  for (const verdict of mergeRuns(runs).votes.values()) {
-    if (new Set(verdict.votes).size > 1) return true;
-  }
-  return false;
+  return mergeRuns(runs).votes.some((verdict) => new Set(verdict.votes).size > 1);
 }
 
 export interface ConsensusOptions {
