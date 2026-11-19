@@ -43,5 +43,5 @@ describe.skipIf(!provider.ok)("golden：2026-11-17 两张卷子", () => {
     }
 
     expect([...found].sort()).toEqual(expected.wrong.map((w) => w.originalNo).sort());
-  }, 180_000);
+  }, 900_000);
 });

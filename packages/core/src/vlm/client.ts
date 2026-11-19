@@ -60,8 +60,8 @@ export class VlmClient {
   readonly headers: Record<string, string>;
   readonly jsonMode: boolean;
   private readonly fetchImpl: FetchLike;
-  private readonly timeoutMs: number;
-  private readonly maxTokens: number;
+  readonly timeoutMs: number;
+  readonly maxTokens: number;
 
   constructor(opts: VlmOptions) {
     const preset = PROVIDERS[opts.provider ?? "opencode-go"];
@@ -76,8 +76,9 @@ export class VlmClient {
     }
     this.jsonMode = preset.jsonMode;
     this.fetchImpl = opts.fetchImpl ?? fetch;
-    this.timeoutMs = opts.timeoutMs ?? 60_000;
-    this.maxTokens = opts.maxTokens ?? 4_000;
+    // 真机实测：整卷转写单次 110–175 秒，推理占 8k–13k tokens
+    this.timeoutMs = opts.timeoutMs ?? 300_000;
+    this.maxTokens = opts.maxTokens ?? 16_000;
   }
 
   private async complete(messages: ChatMessage[]): Promise<string> {
@@ -107,10 +108,28 @@ export class VlmClient {
       }
 
       const data = (await res.json()) as {
-        choices?: Array<{ message?: { content?: string } }>;
+        choices?: Array<{
+          finish_reason?: string;
+          message?: { content?: string; reasoning_content?: string };
+        }>;
+        usage?: { completion_tokens_details?: { reasoning_tokens?: number } };
       };
-      const content = data.choices?.[0]?.message?.content;
-      if (!content) throw new Error("模型回包里没有 content");
+
+      const choice = data.choices?.[0];
+      const content = choice?.message?.content;
+
+      if (!content) {
+        // 这个模型会把预算大头花在 reasoning_content 上：finish_reason=length 且 content 为空
+        // 就是"推理没写完、正文还没来得及出"，不是接口坏了
+        const reasoning = choice?.message?.reasoning_content?.length ?? 0;
+        const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+        throw new Error(
+          `模型没有返回正文（finish_reason=${choice?.finish_reason ?? "未知"}，` +
+            `推理 ${reasoningTokens} tokens / ${reasoning} 字，max_tokens=${this.maxTokens}）。` +
+            `如果是 length，说明推理占满了预算，需要调大 max_tokens。`,
+        );
+      }
+
       return content;
     } finally {
       clearTimeout(timer);
