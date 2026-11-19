@@ -1,7 +1,7 @@
 # ARCHITECTURE.md — 管线与判定
 
-> 最后更新: 2026-11-18 | commit: `1558691`
-> 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/ingest/io.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/judge/answer.ts`, `packages/core/src/render/html.ts`, `packages/core/src/render/figures.ts`, `packages/core/src/vlm/client.ts`
+> 最后更新: 2026-11-18 | commit: `c2667fc`
+> 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/ingest/io.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/judge/answer.ts`, `packages/core/src/judge/consensus.ts`, `packages/core/src/render/html.ts`, `packages/core/src/render/figures.ts`, `packages/core/src/vlm/client.ts`
 
 ## 五段管线
 
@@ -35,6 +35,25 @@
 
 三种情况都要能处理：编号写法在轮次间会变（`一（1）` 与 `1`）、某轮漏一道题、某轮把一行拆成两行。
 按题号对齐会让整页翻倍（真机实测 4 题变 8 题）；按位置对齐一遇漏题就整体错位。
+
+### 判定之前的三个加工步骤
+
+转写拿到的原始数据不能直接进判定，先过三道工序（`runPage` 里顺序固定）：
+
+| 步骤 | 模块 | 做什么 | 为什么 |
+|---|---|---|---|
+| 题干补全 | `judge/stem.ts` | 题干只由标号组成（`（2）`）时，改用同大题最长的题干 | 卷面公共题干写在大题标题里，模型只抄小问标号，导出的卷子上就剩一个「（2）」，学生看不懂要做什么 |
+| 掩膜复核 | `judge/ink.ts` | 模型说「打了叉」且给了 `markBox` 时，检查框内红像素占比，低于 0.3% 降为 `none` | 模型会把没批的题报成打了叉，两轮同时错，投票救不了 |
+| 三票判定 | `judge/verdict.ts` | 老师标记 / 独立求解 / 规则检查 | 见上一节 |
+
+掩膜复核**只降级「打了叉」**，不动「打了勾」。两类错误代价不对称：误降真错题还有独立求解兜底，
+误降真打勾题会把对的题推进错题卷——真机实测过一次，第 1 页四道全被判错。
+
+### 没读到 ≠ 没有标记
+
+模型没返回 `teacherMark` 字段时记 `unread`，投票时是弃权票，不占多数决的分母。
+两轮都没读到时结果仍是 `none`（保守），而不是被两瓶 `unread` 凑成"多数"。
+如果只看「有没有标记」，漏读会被当成老师没批，正好漏判掉要抓的错题。
 
 ### 模型调用的口径
 
