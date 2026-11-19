@@ -3,7 +3,8 @@
  *
  *   pnpm render test/fixtures/2026-11-17/wrong.json /tmp/worksheet.html
  */
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import { z } from "zod";
 
 import { renderWorksheet } from "../render/html.js";
@@ -18,5 +19,6 @@ if (!input || !output) {
 const questions = z.array(Question).parse(JSON.parse(await readFile(input, "utf8")));
 const html = renderWorksheet(questions, { subtitle: "" });
 
+await mkdir(dirname(output), { recursive: true });
 await writeFile(output, html);
 console.log(JSON.stringify({ input, output, questions: questions.length, bytes: html.length }, null, 2));

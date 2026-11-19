@@ -1,7 +1,7 @@
 # INDEX.md — 项目知识库索引总览
 
-> 最后更新: 2026-11-18 | commit: `eb9158e`
-> 覆盖路径: `package.json`, `pnpm-workspace.yaml`, `.dsh/pipeline.json`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/render/html.ts`, `packages/core/src/vlm/client.ts`, `packages/web/app/page.tsx`
+> 最后更新: 2026-11-18 | commit: `992e23e`
+> 覆盖路径: `package.json`, `pnpm-workspace.yaml`, `.dsh/pipeline.json`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/render/html.ts`, `packages/core/src/render/figures.ts`, `packages/core/src/vlm/client.ts`, `packages/web/app/page.tsx`
 
 ## 使用说明
 
@@ -26,7 +26,7 @@
 
 ## 当前阶段
 
-**M3（复刻卷渲染）已完成**。图形 SVG 与界面尚未开始（M4/M5）；V1 的 Python 代码仍在仓内运行，按计划在 M4–M7 逐段替换。
+**M4（参数化图形）已完成**。界面尚未开始（M5）；V1 的 Python 代码仍在仓内运行，按计划在 M5–M7 逐段替换。
 
 | 能力 | 状态 |
 |---|---|

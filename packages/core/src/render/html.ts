@@ -1,4 +1,8 @@
 import type { Figure, Question } from "../schema.js";
+import { escapeHtml } from "./escape.js";
+import { renderFigure } from "./figures.js";
+
+export { escapeHtml } from "./escape.js";
 
 /**
  * 复刻卷渲染：结构化题目 → 可直接打印的 HTML。
@@ -14,7 +18,7 @@ export interface RenderOptions {
   title?: string;
   /** 副标题，如日期 */
   subtitle?: string;
-  /** 图形渲染器；M4 落地前默认输出占位框 */
+  /** 图形渲染器；默认走 renderFigure，测试里可替换 */
   figureRenderer?: (figure: Figure, index: number) => string;
   /** 每题下方留给答题的空白高度（px） */
   answerSpacePx?: number;
@@ -22,25 +26,12 @@ export interface RenderOptions {
 
 const DEFAULT_TITLE = "数学 错题";
 
-export function escapeHtml(input: string): string {
-  return input
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function placeholderFigure(figure: Figure): string {
-  return `<div class="figure figure-placeholder" data-type="${escapeHtml(figure.type)}">（图形待生成）</div>`;
-}
-
 function renderQuestion(
   question: Question,
   index: number,
   opts: Required<Pick<RenderOptions, "answerSpacePx">> & RenderOptions,
 ): string {
-  const figure = opts.figureRenderer ?? placeholderFigure;
+  const figure = opts.figureRenderer ?? ((f: Figure) => renderFigure(f));
   const figures = question.figures
     .map((f, i) => figure(f, i))
     .join("\n      ");
@@ -68,9 +59,6 @@ const STYLE = `
   .stem { margin: 0 0 6px; text-align: justify; }
   .no { margin-right: 6px; }
   .figures { margin: 6px 0 10px; text-align: center; }
-  .figure-placeholder {
-    display: inline-block; padding: 18px 28px; border: 1px dashed #bbb; color: #999; font-size: 10pt;
-  }
   .answer-space { border-bottom: 1px dotted #e2e2e2; }
   @media print { body { padding: 0; } .answer-space { border-bottom: none; } }
 `;
@@ -84,7 +72,10 @@ export function renderWorksheet(questions: Question[], opts: RenderOptions = {})
 
   const meta = [`共 ${questions.length} 题`, subtitle].filter((s) => s !== "").join(" · ");
 
-  const body = questions
+  // 调用方可以传未排序数组，编号以 sequence 为准
+  const ordered = [...questions].sort((a, b) => a.sequence - b.sequence);
+
+  const body = ordered
     .map((q, i) => renderQuestion(q, i, { ...opts, answerSpacePx }))
     .join("\n");
 

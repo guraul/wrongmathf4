@@ -1,6 +1,6 @@
 # DATA.md — 数据与文件
 
-> 最后更新: 2026-11-18 | commit: `eb9158e`
+> 最后更新: 2026-11-18 | commit: `992e23e`
 > 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/ingest/pixels.ts`
 
 ## 数据模型
