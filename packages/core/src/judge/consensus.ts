@@ -1,5 +1,14 @@
 import type { TeacherMark } from "../schema.js";
-import type { RawPage, RawQuestion } from "../vlm/parse.js";
+import type { RawMark, RawPage, RawQuestion } from "../vlm/parse.js";
+
+/** 投票后标记一定是三种之一：unread 只是"没读到"，不进最终结果 */
+export interface ResolvedQuestion extends Omit<RawQuestion, "teacherMark"> {
+  teacherMark: TeacherMark;
+}
+
+export interface ResolvedPage {
+  questions: ResolvedQuestion[];
+}
 
 /**
  * 两轮转写投票。
@@ -29,7 +38,7 @@ export function markKey(originalNo: string): string {
  * 题目的完整对齐键 = 规范化题号 + 题干前缀，用于去重（不做跨轮对齐）。
  */
 export function questionKey(q: { originalNo: string; stem: string }): string {
-  return `${markKey(q.originalNo)}#${normalizeStem(q.stem).slice(0, 24)}`;
+  return `${markKey(q.originalNo)}#${normalizeStem(q.stem)}`;
 }
 
 /** 归一化题干：全角转半角、去掉标点与空白，只留汉字字母数字，再算相似度才稳 */
@@ -58,13 +67,22 @@ export function dedupePage(page: RawPage): RawPage {
 
 export interface Verdict3 {
   mark: TeacherMark;
-  votes: TeacherMark[];
+  /** 原始票，可能含 unread（模型没读到这个字段） */
+  votes: RawMark[];
 }
 
-/** 三票（或两票）多数决：出现次数最多且过半才采用，否则 none */
-export function voteMarks(marks: TeacherMark[]): Verdict3 {
+/**
+ * 多数决：`unread` 是弃权票，不参与分母。
+ *
+ * 这样两轮都漏读时结果是 `none`（保守），而不是被两票 unread 凑成"多数"；
+ * 只有一票 right、一票 unread 时，right 作为唯一有效票胜出。
+ */
+export function voteMarks(marks: RawMark[]): Verdict3 {
+  const counted = marks.filter((m): m is TeacherMark => m !== "unread");
+  if (counted.length === 0) return { mark: "none", votes: marks };
+
   const counts = new Map<TeacherMark, number>();
-  for (const m of marks) counts.set(m, (counts.get(m) ?? 0) + 1);
+  for (const m of counted) counts.set(m, (counts.get(m) ?? 0) + 1);
 
   let best: TeacherMark = "none";
   let bestCount = 0;
@@ -75,13 +93,13 @@ export function voteMarks(marks: TeacherMark[]): Verdict3 {
     }
   }
 
-  // 必须严格过半，平票就是没结论
-  const decided = bestCount * 2 > marks.length ? best : "none";
+  // 必须严格过半（按有效票算），平票就是没结论
+  const decided = bestCount * 2 > counted.length ? best : "none";
   return { mark: decided, votes: marks };
 }
 
 export interface ConsensusResult {
-  page: RawPage;
+  page: ResolvedPage;
   /** 与 questions 一一对应的投票明细（同号多题不会互相覆盖） */
   votes: Verdict3[];
   /** 题数最多的那一轮是正文来源 */
@@ -201,14 +219,14 @@ export function mergeRuns(runs: RawPage[]): ConsensusResult {
   const spine = cleaned[spineIndex] as RawPage;
   const others = cleaned.filter((_, i) => i !== spineIndex);
 
-  const questions: RawQuestion[] = spine.questions.map((q) => ({ ...q }));
+  const questions: ResolvedQuestion[] = spine.questions.map((q) => ({ ...q, teacherMark: "none" }));
   const votes: Verdict3[] = [];
 
   // 每轮对底稿的对齐结果，供投票与补题共用
   const alignments = others.map((run) => alignRun(spine.questions, run.questions));
 
   for (const [index, q] of spine.questions.entries()) {
-    const marks: TeacherMark[] = [q.teacherMark];
+    const marks: RawMark[] = [q.teacherMark];
 
     for (const [runIndex, run] of others.entries()) {
       const pair = alignments[runIndex]?.pairs.find(([spineIdx]) => spineIdx === index);
@@ -232,7 +250,7 @@ export function mergeRuns(runs: RawPage[]): ConsensusResult {
       const q = run.questions[extraIndex];
       if (q === undefined) continue;
 
-      const marks: TeacherMark[] = [q.teacherMark];
+      const marks: RawMark[] = [q.teacherMark];
       for (const [otherIndex, otherRun] of others.entries()) {
         if (otherIndex === runIndex) continue;
         const twin = otherRun.questions.find((x) => questionScore(x, q) >= MATCH_THRESHOLD);

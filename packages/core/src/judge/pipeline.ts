@@ -1,4 +1,4 @@
-import type { Question } from "../schema.js";
+import type { Question, TeacherMark } from "../schema.js";
 import type { RawPage, RawQuestion } from "../vlm/parse.js";
 import { checkFigures } from "./rules.js";
 import { applyClusterAgreement, decide } from "./verdict.js";
@@ -18,8 +18,11 @@ export interface BuildResult {
 }
 
 function toQuestion(q: RawQuestion, sequence: number, solverAnswer: string | null): Question {
+  // 正常情况下投票后已经没有 unread；真漏到这一步就按"没批到"处理，但不假装读过
+  const mark: TeacherMark = q.teacherMark === "unread" ? "none" : q.teacherMark;
+
   const judged = decide({
-    teacherMark: q.teacherMark,
+    teacherMark: mark,
     subjective: q.subjective,
     studentAnswer: q.studentAnswer,
     solverAnswer,
@@ -33,7 +36,7 @@ function toQuestion(q: RawQuestion, sequence: number, solverAnswer: string | nul
     kind: q.kind,
     stem: q.stem,
     figures: q.figures,
-    teacherMark: q.teacherMark,
+    teacherMark: mark,
     solverAnswer,
     verdict: judged.verdict,
     confidence: judged.confidence,
@@ -48,7 +51,9 @@ function toQuestion(q: RawQuestion, sequence: number, solverAnswer: string | nul
  * 但结论不因此翻转——宁可在报告里显示低置信，也不猜。
  */
 export function buildQuestions(input: BuildInput): BuildResult {
-  const claimedMarks = input.page.questions.filter((q) => q.teacherMark !== "none").length;
+  const claimedMarks = input.page.questions.filter(
+    (q) => q.teacherMark === "right" || q.teacherMark === "wrong",
+  ).length;
 
   const questions = input.page.questions.map((q, i) => {
     const solverAnswer = input.solver.get(q.originalNo) ?? null;
