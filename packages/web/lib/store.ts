@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 export type Status = "queued" | "processing" | "done" | "failed";
@@ -46,8 +46,19 @@ export function dataDir(): string {
   return process.env.WRONGMATH_DATA_DIR ?? join(repoRoot(), "data");
 }
 
+const BATCH_ID = /^[\w-]{1,64}$/;
+
+/**
+ * 批次 id 会直接进文件路径，必须先过白名单。
+ * 不校验的话，路由参数里编码的 ../ 能拼出 data/batches 之外的路径。
+ */
+export function assertBatchId(id: string): string {
+  if (!BATCH_ID.test(id)) throw new Error(`非法批次 id: ${id}`);
+  return id;
+}
+
 export function batchDir(id: string): string {
-  return join(dataDir(), "batches", id);
+  return join(dataDir(), "batches", assertBatchId(id));
 }
 
 function recordPath(id: string): string {
@@ -82,7 +93,11 @@ export async function createBatch(files: Array<{ name: string; buffer: Buffer }>
 
 export async function saveBatch(record: BatchRecord): Promise<void> {
   await mkdir(batchDir(record.id), { recursive: true });
-  await writeFile(recordPath(record.id), JSON.stringify(record, null, 2), "utf8");
+  // 临时文件 + rename：worker 写得频繁，前端又在轮询，不能让它读到半截 JSON
+  const target = recordPath(record.id);
+  const temp = `${target}.tmp`;
+  await writeFile(temp, JSON.stringify(record, null, 2), "utf8");
+  await rename(temp, target);
 }
 
 export async function getBatch(id: string): Promise<BatchRecord | null> {

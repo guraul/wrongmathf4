@@ -25,6 +25,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "没有收到图片" }, { status: 400 });
   }
 
+  const notImage = files.find((f) => !f.type.startsWith("image/"));
+  if (notImage !== undefined) {
+    return NextResponse.json({ error: `只支持图片，收到 ${notImage.name}（${notImage.type || "未知类型"}）` }, { status: 400 });
+  }
+
   const images = await Promise.all(
     files.map(async (file) => ({ name: file.name, buffer: Buffer.from(await file.arrayBuffer()) })),
   );

@@ -24,7 +24,11 @@ const state: QueueState = (globalForQueue.__wrongmathQueue ??= { pending: [], ru
 
 export function enqueue(batchId: string): void {
   state.pending.push(batchId);
-  void pump();
+  // pump 自己兜底；这里再挂一次 catch，避免任何漏网异常变成未处理拒绝把进程带走
+  void pump().catch((error: unknown) => {
+    console.error("[worker] 队列异常", error);
+    state.running = false;
+  });
 }
 
 async function pump(): Promise<void> {
@@ -36,12 +40,18 @@ async function pump(): Promise<void> {
       const id = state.pending.shift();
       if (id === undefined) break;
       await processBatch(id).catch(async (error: unknown) => {
-        const record = await getBatch(id);
-        if (record === null) return;
-        record.status = "failed";
-        record.error = error instanceof Error ? error.message : String(error);
-        record.log.push(`批次失败：${record.error}`);
-        await saveBatch(record);
+        const message = error instanceof Error ? error.message : String(error);
+        try {
+          const record = await getBatch(id);
+          if (record === null) return;
+          record.status = "failed";
+          record.error = message;
+          record.log.push(`批次失败：${message}`);
+          await saveBatch(record);
+        } catch (nested) {
+          // 连失败都记不下来（磁盘满之类），只能打日志，绝不能再抛
+          console.error(`[worker] 批次 ${id} 记录失败状态时又出错`, nested, message);
+        }
       });
     }
   } finally {
