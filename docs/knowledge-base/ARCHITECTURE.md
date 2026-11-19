@@ -1,6 +1,6 @@
 # ARCHITECTURE.md — 管线与判定
 
-> 最后更新: 2026-11-18 | commit: `04b4928`
+> 最后更新: 2026-11-18 | commit: `4c5f5c6`
 > 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/ingest/io.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/judge/answer.ts`, `packages/core/src/render/html.ts`, `packages/core/src/render/figures.ts`, `packages/core/src/vlm/client.ts`
 
 ## 五段管线
@@ -13,6 +13,21 @@
         │        └─ DeepSeek Flash，放大后送图，每页两轮
         └─ PDF→PNG、EXIF 旋转、放大 2–3 倍、红笔颜色掩膜
 ```
+
+### 转写要投票，不能只信一次
+
+同一张图、同一套提示词，两次转写会读出不同的红笔符号和题号——真机上三种结果都见过：
+
+| 运行 | 错题集合 |
+|---|---|
+| 探针 | 一（2）、二.1（正确） |
+| golden | 二.1、二（1）②、（1）、（2）（漏判 + 编造编号） |
+| 单页复跑 | 一（4）被判错（老师实际打勾） |
+
+所以转写跑两轮，按题号对齐逐题投票：两轮一致直接采用；不一致补第三轮，两票多数决；
+**三轮各不同 → `none`**。选 `none` 是保守：判 unknown 只是让人多看一眼，误判成错会让学生多做一道题。
+
+正文取「题数最多」的那轮的并集（某轮漏题不该丢题），标记取所有轮次的多数决。
 
 ### 模型调用的口径
 

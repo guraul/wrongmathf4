@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { prepareForModel } from "../src/ingest/io.js";
+import { transcribeWithConsensus } from "../src/judge/consensus.js";
 import { buildQuestions, wrongQuestions } from "../src/judge/pipeline.js";
 import { VlmClient } from "../src/vlm/client.js";
 import { resolveProvider } from "../src/vlm/providers.js";
@@ -35,13 +36,14 @@ describe.skipIf(!provider.ok)("golden：2026-11-17 两张卷子", () => {
       const prepared = await prepareForModel(`${FIXTURES}${page}`);
       const dataUrl = `data:image/png;base64,${prepared.buffer.toString("base64")}`;
 
-      const page1 = await client.transcribe(dataUrl);
-      const solver = await client.solve(page1.questions);
-      const { questions } = buildQuestions({ page: page1, solver, foundClusters: 1 });
+      // 两轮投票：这个模型对红笔符号的读取不稳定，单次结果不能直接信
+      const consensus = await transcribeWithConsensus(() => client.transcribe(dataUrl));
+      const solver = await client.solve(consensus.page.questions);
+      const { questions } = buildQuestions({ page: consensus.page, solver, foundClusters: 1 });
 
       for (const q of wrongQuestions(questions)) found.add(q.originalNo);
     }
 
     expect([...found].sort()).toEqual(expected.wrong.map((w) => w.originalNo).sort());
-  }, 900_000);
+  }, 1_800_000);
 });

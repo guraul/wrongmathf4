@@ -11,6 +11,7 @@ import { prepareForModel } from "../ingest/io.js";
 import { loadImage } from "../ingest/io.js";
 import { redMask } from "../ingest/pixels.js";
 import { clusterMask } from "../judge/cluster.js";
+import { transcribeWithConsensus } from "../judge/consensus.js";
 import { buildQuestions, wrongQuestions } from "../judge/pipeline.js";
 import { RawPage } from "../vlm/parse.js";
 import { VlmClient } from "../vlm/client.js";
@@ -62,7 +63,11 @@ if (replayIdx >= 0) {
     ...(process.env.WM_ENDPOINT ? { endpoint: process.env.WM_ENDPOINT } : {}),
   });
 
-  page = await client.transcribe(dataUrl);
+  const consensus = await transcribeWithConsensus(() => client.transcribe(dataUrl), {
+    onRun: (index, p) => console.error(`  转写第 ${index} 轮：${p.questions.length} 题`),
+  });
+  console.error(`  采用 ${consensus.runs} 轮投票结果，题数 ${consensus.page.questions.length}`);
+  page = consensus.page;
   const solver = await client.solve(page.questions);
 
   const foundClusters = maskPath ? await clusterCount(maskPath) : 0;

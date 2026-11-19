@@ -1,6 +1,6 @@
 # DATA.md — 数据与文件
 
-> 最后更新: 2026-11-18 | commit: `04b4928`
+> 最后更新: 2026-11-18 | commit: `4c5f5c6`
 > 覆盖路径: `packages/core/src/schema.ts`, `packages/core/src/ingest/pixels.ts`
 
 ## 数据模型
@@ -19,6 +19,7 @@
 - **尺寸是字符串**（`"0.8"`），不用浮点，避免 `0.1+0.2` 这类误差进契约；生成器自己做转换并报错。
 - `originalNo` 保留卷面原印编号（`2(1)`、`3(5)①`），`sequence` 只用于排序。
 - `verdict` 三值，`unknown` 一律按 `wrong` 处理（宁可多报）。
+- 转写投票的每轮结果可以在 `mergeRuns` 的返回值里拿到（`votes`），排查「为什么这题被判 none」时看它。
 - `evidence` 存三票原始结论，**不进复刻卷**：`reason`、`rulesFailed`、`suspicious`（老师打勾但规则算不通）、`presenceMismatch`（模型说有标记但掩膜没找到）。
 
 ## 数据库（目标，M5 引入）

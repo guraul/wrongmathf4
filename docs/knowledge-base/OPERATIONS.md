@@ -1,6 +1,6 @@
 # OPERATIONS.md — 运行、部署与踩坑
 
-> 最后更新: 2026-11-18 | commit: `04b4928`
+> 最后更新: 2026-11-18 | commit: `4c5f5c6`
 > 覆盖路径: `packages/web/next.config.mjs`, `.dsh/pipeline.json`, `pnpm-workspace.yaml`, `packages/core/src/ingest/io.ts`, `packages/core/src/cli/mask.ts`
 
 ## 环境变量
@@ -21,6 +21,9 @@
 
 选法：`WM_PROVIDER` 有值就用它（缺 key 直接报错，不静默换），否则按上表顺序找第一个配了 key 的。
 `.env` 由 `process.loadEnvFile()` 自动加载（Node 自带，不引 dotenv），文件不存在就跳过。
+
+**真机耗时**：整卷转写单次 110–175 秒（推理占约 1 万 tokens），两轮投票后约 5 分钟/页；
+`maxTokens` 必须给到 32000，16000 会出现 JSON 被截断。
 
 `response_format: json_object` 只对 DeepSeek 官方发送——opencode go 的网关没验证过是否支持，
 关掉它不影响解析（`extractJson` 自己会剥围栏找 JSON）。`WM_ENDPOINT` 可临时把请求指向别的端点。
