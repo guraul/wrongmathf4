@@ -106,7 +106,7 @@ Next 默认只读 `packages/web/` 下的 `.env`，不加这一步会找不到 ke
 ## 部署（M7）
 
 - systemd 单服务，`ExecStart` 跑 `packages/web` 的 Next standalone 产物，端口 `PORT`
-- 旧的 `deploy/wrongmath.service`（`python3 main.py`）在 M7 一起替换
+- `deploy/` 里有 Node 版的 systemd 单元与 macOS launchd 配置，说明见 `deploy/README.md`
 - 无反向代理、无数据库服务、无 worker 进程
 
 ## 已知陷阱

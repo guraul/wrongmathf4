@@ -1,5 +1,5 @@
 [Unit]
-Description=WrongMath AI Agent
+Description=WrongMath (Node)
 After=network.target
 
 [Service]
@@ -7,7 +7,9 @@ Type=simple
 User=wrongmath
 WorkingDirectory=/opt/wrongmath
 EnvironmentFile=/opt/wrongmath/.env
-ExecStart=/usr/bin/python3 main.py
+Environment=NODE_ENV=production
+Environment=PORT=19238
+ExecStart=/usr/bin/pnpm start
 Restart=on-failure
 RestartSec=10
 
