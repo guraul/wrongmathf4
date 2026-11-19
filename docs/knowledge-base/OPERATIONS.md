@@ -1,6 +1,6 @@
 # OPERATIONS.md — 运行、部署与踩坑
 
-> 最后更新: 2026-11-18 | commit: `4c5f5c6`
+> 最后更新: 2026-11-18 | commit: `e14aabe`
 > 覆盖路径: `packages/web/next.config.mjs`, `.dsh/pipeline.json`, `pnpm-workspace.yaml`, `packages/core/src/ingest/io.ts`, `packages/core/src/cli/mask.ts`
 
 ## 环境变量
@@ -42,7 +42,8 @@
 pnpm install          # 首次
 pnpm test             # 契约 + 图像输入测试
 pnpm typecheck        # 类型检查
-pnpm dev              # http://localhost:19238
+pnpm dev              # http://localhost:19238（PORT 可覆盖）
+pnpm build            # Next standalone 构建
 pnpm mask test/fixtures/2026-11-17/p1-geo5.jpg /tmp/mask.png   # 红笔掩膜可视化
 pnpm judge test/fixtures/2026-11-17/p1-geo5.jpg --mask test/fixtures/2026-11-17/p1-geo5.jpg  # 判定报告（需 key）
 pnpm judge --replay test/fixtures/2026-11-17/page1.replay.json --mask test/fixtures/2026-11-17/p1-geo5.jpg  # 离线复算
@@ -79,6 +80,17 @@ scripts/pipeline/merge-pr.sh --pr <n> --record <记录> --root .
 
 `.dsh/pipeline.json` 里 `checks.packages` 决定 `check-all` 在哪些包装跑检查，当前是
 `packages/core` 与 `packages/web`。
+
+## 界面怎么跑
+
+```bash
+pnpm dev                       # 开发模式，默认 19238
+PORT=19240 pnpm dev            # 换端口（package.json 里的 ${PORT:-19238}）
+WRONGMATH_DATA_DIR=/tmp/wm pnpm dev   # 换数据目录
+```
+
+`.env` 在仓库根，界面启动时会自己加载（`loadEnv(join(repoRoot(), ".env"))`）——
+Next 默认只读 `packages/web/` 下的 `.env`，不加这一步会找不到 key。
 
 ## 知识库 stamp 的语义
 
