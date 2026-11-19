@@ -1,3 +1,4 @@
+import { markKey } from "./consensus.js";
 import type { RawPage, RawQuestion } from "../vlm/parse.js";
 
 /**
@@ -30,8 +31,12 @@ export function applyFigureRecheck(
 ): FigureRecheckResult {
   const corrected: string[] = [];
 
+  // 第三轮和第一轮的题号写法可能不同（二.1 / 二（1）），按归一化键匹配
+  const byKey = new Map<string, RawQuestion["figures"]>();
+  for (const [originalNo, figures] of reread) byKey.set(markKey(originalNo), figures);
+
   const questions = page.questions.map((q) => {
-    const fresh = reread.get(q.originalNo);
+    const fresh = byKey.get(markKey(q.originalNo));
     if (fresh === undefined) return q;
     if (stableStringify(fresh) === stableStringify(q.figures)) return q;
 

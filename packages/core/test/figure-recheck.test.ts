@@ -41,8 +41,22 @@ describe("图形尺寸复核", () => {
   });
 
   it("只差字段顺序时不算改正", () => {
-    const result = applyFigureRecheck(page(TRIANGLE), new Map([["一（1）", TRIANGLE]]));
+    // 刻意换一个键序，验证比较不受对象字面量顺序影响
+    const reordered: RawQuestion["figures"] = [
+      {
+        unit: "cm",
+        layout: "stack",
+        type: "composite",
+        parts: [{ height: "2", base: "4.2", shape: "triangle" }],
+      },
+    ];
+    const result = applyFigureRecheck(page(TRIANGLE), new Map([["一（1）", reordered]]));
     expect(result.corrected).toEqual([]);
+  });
+
+  it("题号写法不同（一(1) 与 一（1））也能对上", () => {
+    const result = applyFigureRecheck(page(WRONG_TRIANGLE), new Map([["一(1)", TRIANGLE]]));
+    expect(result.corrected).toEqual(["一（1）"]);
   });
 
   it("第二轮没给这道题时不动", () => {

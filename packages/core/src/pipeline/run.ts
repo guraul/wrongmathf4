@@ -46,7 +46,7 @@ export async function runPage(
     const rechecked = applyFigureRecheck(page, reread);
     figureCorrected = rechecked.corrected;
     if (figureCorrected.length > 0) {
-      opts.onProgress?.(`${figureCorrected.length} 道题的图形尺寸按第二轮读数改正`);
+      opts.onProgress?.(`${figureCorrected.length} 道题的图形尺寸按第三轮读数改正`);
     }
     page = rechecked.page;
   }
