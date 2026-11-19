@@ -79,8 +79,24 @@ describe("模型客户端", () => {
 
   it("默认预算与超时按真机实测设置", () => {
     const client = new VlmClient({ apiKey: "k" });
-    expect(client.maxTokens).toBe(16_000);
+    expect(client.maxTokens).toBe(32_000);
     expect(client.timeoutMs).toBe(300_000);
+  });
+
+  it("finish_reason=length 但正文非空时，也要报截断而不是让 JSON 解析炸掉", async () => {
+    const fetchImpl = vi.fn(async (_input: string, _init?: RequestInit) =>
+      new Response(
+        JSON.stringify({
+          choices: [
+            { finish_reason: "length", message: { role: "assistant", content: '{"questions":[{"originalNo":"一（1）"' } },
+          ],
+          usage: { completion_tokens_details: { reasoning_tokens: 10421 } },
+        }),
+        { status: 200 },
+      ),
+    );
+    const client = new VlmClient({ apiKey: "k", fetchImpl });
+    await expect(client.transcribe("data:image/png;base64,AAA")).rejects.toThrow(/输出被截断.*10421/);
   });
 
   it("finish_reason=length 且无正文时，报错指出是预算被推理吃光", async () => {

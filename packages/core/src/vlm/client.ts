@@ -76,9 +76,10 @@ export class VlmClient {
     }
     this.jsonMode = preset.jsonMode;
     this.fetchImpl = opts.fetchImpl ?? fetch;
-    // 真机实测：整卷转写单次 110–175 秒，推理占 8k–13k tokens
+    // 真机实测：整卷转写单次 110–175 秒，推理稳定占 1 万 tokens 上下，
+    // 16000 时正文会被挤到截断，32000 才能稳定拿到完整 JSON
     this.timeoutMs = opts.timeoutMs ?? 300_000;
-    this.maxTokens = opts.maxTokens ?? 16_000;
+    this.maxTokens = opts.maxTokens ?? 32_000;
   }
 
   private async complete(messages: ChatMessage[]): Promise<string> {
@@ -117,6 +118,15 @@ export class VlmClient {
 
       const choice = data.choices?.[0];
       const content = choice?.message?.content;
+
+      // 截断优先于"有没有正文"：半截 JSON 比空回包更难查
+      if (choice?.finish_reason === "length") {
+        const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+        throw new Error(
+          `输出被截断（finish_reason=length，推理 ${reasoningTokens} tokens，` +
+            `正文 ${content?.length ?? 0} 字，max_tokens=${this.maxTokens}）。需要调大 max_tokens。`,
+        );
+      }
 
       if (!content) {
         // 这个模型会把预算大头花在 reasoning_content 上：finish_reason=length 且 content 为空
