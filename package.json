@@ -15,7 +15,8 @@
     "build": "pnpm --filter @wrongmath/web build",
     "mask": "tsx packages/core/src/cli/mask.ts",
     "judge": "tsx packages/core/src/cli/judge.ts",
-    "render": "tsx packages/core/src/cli/render.ts"
+    "render": "tsx packages/core/src/cli/render.ts",
+    "start": "pnpm --filter @wrongmath/web start"
   },
   "devDependencies": {
     "tsx": "^4.23.15",

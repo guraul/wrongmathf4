@@ -26,7 +26,7 @@
 
 ## 当前阶段
 
-**M5（上传界面）已完成**。剩下真机回归固化与切换（M6/M7）；V1 的 Python 代码仍在仓内运行。
+**M7 完成，单栈运行**：V1 的 Python 代码与旧的 Next.js 前端已删（回滚见 tag `v1-python`）。
 
 | 能力 | 状态 |
 |---|---|
@@ -68,7 +68,7 @@ wrongmathf4/
 │   ├── core/                 # 纯逻辑：契约、识别、判定、渲染、图形
 │   └── web/                  # Next.js 页面与 API
 ├── test/fixtures/            # 回归用原图（2026-11-17 等）
-└── agent/ core/ servers/     # V1 Python，计划 M1–M7 删除
+└── deploy/                   # systemd 单元 + launchd 配置
 ```
 
 ## 模块地图

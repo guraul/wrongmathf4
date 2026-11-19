@@ -8,61 +8,18 @@ settings.json
 *.pem
 *.crt
 
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.so
-*.egg-info/
-dist/
-build/
-venv/
-.venv/
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-coverage.xml
-*.cover
-.hypothesis/
-
 # Logs
 *.log
 mcp_server.log
 
-# Frontend (Next.js)
-frontend/node_modules/
-frontend/.next/
-frontend/out/
-frontend/build/
-frontend/package-lock.json
-frontend/.env*
-!frontend/.env.example
-
-# Output & Uploads
+# 老产物与运行时
 output/
-input/
 uploads/
-frontend/uploads/
-frontend/output/
 logs/
-
-# Abandoned Java backend
-backend/
 
 # Process Management
 *.pid
 .pids/
-
-# Trae / AI Assistant
-.trae/
-
-# Old Project Structure (after refactor)
-/src/
-web.py
-run_server.sh
 
 # OS
 .DS_Store
