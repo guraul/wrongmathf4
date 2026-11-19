@@ -64,7 +64,10 @@ export function verifyMarks(
   const noBox: string[] = [];
 
   const questions = page.questions.map((q) => {
-    if (q.teacherMark === "none" || q.teacherMark === "unread") return q;
+    // 只复核「打了叉」：降级后若真是错题，独立求解还能兜住（实测二.1 就是这条路回来的）；
+    // 反过来降级「打了勾」会把它推进求解比对，而求解在图形题上本来就不准——真机实测
+    // 第 1 页四道全被判错。宁可放过一句"打了勾"，也不能把对的题推进错题卷。
+    if (q.teacherMark !== "wrong") return q;
 
     if (q.markBox === null) {
       noBox.push(q.originalNo);

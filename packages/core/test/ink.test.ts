@@ -61,6 +61,15 @@ describe("框内红笔占比", () => {
 describe("标记复核", () => {
   const mask = maskWith([[10, 10, 20, 20]]);
 
+  it("框里没有红笔的「打勾」不降级——降了会推进求解比对，反而误判", () => {
+    const page: RawPage = {
+      questions: [question("一（1）", "right", [0.6, 0.6, 0.1, 0.05])],
+    };
+    const result = verifyMarks(page, mask, W, H);
+    expect(result.page.questions[0]?.teacherMark).toBe("right");
+    expect(result.demoted).toEqual([]);
+  });
+
   it("框里有红笔的标记保留", () => {
     const page: RawPage = {
       questions: [question("一（1）", "wrong", [0.12, 0.12, 0.06, 0.06])],
