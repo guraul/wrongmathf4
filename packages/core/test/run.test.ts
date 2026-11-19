@@ -29,6 +29,7 @@ function page(mark: "wrong" | "right"): RawPage {
 function fakeClient(pageFactory: () => RawPage, answer: string | null = null): VlmClient {
   return {
     transcribe: vi.fn(async () => pageFactory()),
+    readFigures: vi.fn(async () => new Map()),
     solve: vi.fn(async () => (answer === null ? new Map() : new Map([["一（2）", answer]]))),
   } as unknown as VlmClient;
 }
@@ -91,5 +92,39 @@ describe("整批渲染", () => {
     expect(html.startsWith("<!doctype html>")).toBe(true);
     expect(html).toContain("求下列组合图形的面积");
     expect(html).toContain("<svg");
+  });
+});
+
+describe("图形尺寸第三轮", () => {
+  it("带图形的页面会多跑一次尺寸核对，不一致时以第三轮为准", async () => {
+    const wrongFigure = { type: "composite" as const, layout: "stack" as const, unit: "cm", parts: [{ shape: "triangle" as const, base: "5", height: "2.4" }] };
+    const rightFigure = { type: "composite" as const, layout: "stack" as const, unit: "cm", parts: [{ shape: "triangle" as const, base: "4.2", height: "2" }] };
+
+    const client = {
+      transcribe: vi.fn(async () => ({
+        questions: [
+          {
+            originalNo: "一（2）",
+            kind: "geometry" as const,
+            stem: "求下列组合图形的面积。（单位：cm）",
+            figures: [wrongFigure],
+            teacherMark: "wrong" as const,
+            markBox: null,
+            studentAnswer: "7.92 cm²",
+            subjective: false,
+          },
+        ],
+      })),
+      readFigures: vi.fn(async () => new Map([["一（2）", [rightFigure]]])),
+      solve: vi.fn(async () => new Map([["一（2）", "13.32 cm²"]])),
+    } as unknown as VlmClient;
+
+    const messages: string[] = [];
+    const questions = await runPage(`${FIXTURES}p1-geo5.jpg`, client, { onProgress: (m) => messages.push(m) });
+
+    expect((client.readFigures as any).mock.calls).toHaveLength(1);
+    expect(questions[0]?.figures).toEqual([rightFigure]);
+    expect(questions[0]?.evidence.figureCorrected).toBe(true);
+    expect(messages.some((m) => m.includes("图形尺寸"))).toBe(true);
   });
 });

@@ -1,6 +1,13 @@
-import { RawPage, SolverOutput, type RawQuestion } from "./parse.js";
+import { FiguresOutput, RawPage, SolverOutput, type RawQuestion } from "./parse.js";
 import { PROVIDERS, type ProviderId } from "./providers.js";
-import { TRANSCRIBE_SYSTEM, TRANSCRIBE_USER, solveSystem, solveUser } from "./prompt.js";
+import {
+  figuresSystem,
+  figuresUser,
+  solveSystem,
+  solveUser,
+  TRANSCRIBE_SYSTEM,
+  TRANSCRIBE_USER,
+} from "./prompt.js";
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -161,6 +168,38 @@ export class VlmClient {
     ]);
 
     return RawPage.parse(extractJson(text));
+  }
+
+  /**
+   * 第三轮：只核对带图形题目的尺寸标注。
+   * 返回题号 → 图形参数；readable 为 false 的题不在结果里（看不清就不改）。
+   */
+  async readFigures(
+    imageDataUrl: string,
+    questions: RawQuestion[],
+  ): Promise<Map<string, RawQuestion["figures"]>> {
+    const withFigures = questions.filter((q) => q.figures.length > 0);
+    if (withFigures.length === 0) return new Map();
+
+    const text = await this.complete([
+      { role: "system", content: figuresSystem() },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: figuresUser(withFigures) },
+          { type: "image_url", image_url: { url: imageDataUrl, detail: "original" } },
+        ],
+      },
+    ]);
+
+    const parsed = FiguresOutput.parse(extractJson(text));
+    const result = new Map<string, RawQuestion["figures"]>();
+    for (const item of parsed.figures) {
+      // 看不清楚的不改；看到了东西但结构化不出来（空数组）也不改
+      if (!item.readable || item.figures.length === 0) continue;
+      result.set(item.originalNo, item.figures);
+    }
+    return result;
   }
 
   /** 第二轮：题干 + 图形参数 → 独立解答（不给学生答案）。 */

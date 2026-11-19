@@ -65,3 +65,36 @@ export function solveUser(questions: RawQuestion[]): string {
 
   return `题目如下（JSON）：\n${JSON.stringify(list, null, 2)}\n\n请逐题解答。`;
 }
+
+/**
+ * 第三轮：只核对带图形题目的尺寸标注。
+ *
+ * 图形题第一轮要同时读题、读学生答案、读红笔，注意力被分散，尺寸容易串行
+ * （真机实测：三角形底 4.2 高 2 被读成底 5 高 2.4）。单独问一次尺寸，只让它看图上的数字。
+ */
+export function figuresSystem(): string {
+  return `你是一个核对小学数学作业图形标注的工具。只输出 JSON，不要解释。
+
+输出格式：
+{"figures":[{"originalNo":"题目编号","readable":true,"figures":[图形参数]}]}
+
+图形参数只支持四种，禁止编造坐标：
+- {"type":"composite","layout":"stack|side","parts":[{"shape":"rect","width":"12","height":"4"} |
+  {"shape":"triangle","base":"4.2","height":"2"} | {"shape":"trapezoid","top":"2.6","bottom":"5","height":"2.4"}]}
+- {"type":"division","dividend":1000,"divisor":30,"quotient":33,"remainder":10}
+- {"type":"cards","values":["2","4","5","6"],"picked":["2","4"]}
+- {"type":"unitTable","rows":[["6平方千米","6000000平方米"]]}
+
+要求：
+1. 只抄图上印着的数字，不要计算、不要补全。
+2. 图上标着什么就写什么；同一道题的多个图形放在 parts 里，顺序照图。
+3. 数字看不清就把 readable 置 false 并且不给 figures，不要猜。`;
+}
+
+export function figuresUser(questions: RawQuestion[]): string {
+  const list = questions
+    .filter((q) => q.figures.length > 0)
+    .map((q) => ({ originalNo: q.originalNo }));
+
+  return `下面这些题带图形，请逐题读出图上标注的尺寸（JSON）：\n${JSON.stringify(list, null, 2)}`;
+}

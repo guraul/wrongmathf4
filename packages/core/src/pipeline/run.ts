@@ -3,6 +3,7 @@ import { loadImage } from "../ingest/io.js";
 import { redMask } from "../ingest/pixels.js";
 import { clusterMask } from "../judge/cluster.js";
 import { transcribeWithConsensus } from "../judge/consensus.js";
+import { applyFigureRecheck } from "../judge/figure-recheck.js";
 import { verifyMarks } from "../judge/ink.js";
 import { buildQuestions } from "../judge/pipeline.js";
 import { repairStems } from "../judge/stem.js";
@@ -37,14 +38,27 @@ export async function runPage(
   }
   opts.onProgress?.(`采用 ${consensus.runs} 轮投票结果，共 ${repaired.page.questions.length} 题`);
 
-  const solver = await client.solve(repaired.page.questions);
+  // 第三轮：只核对带图形题目的尺寸（第一轮注意力被分散，尺寸容易串）
+  let page = repaired.page;
+  let figureCorrected: string[] = [];
+  if (page.questions.some((q) => q.figures.length > 0)) {
+    const reread = await client.readFigures(dataUrl, page.questions);
+    const rechecked = applyFigureRecheck(page, reread);
+    figureCorrected = rechecked.corrected;
+    if (figureCorrected.length > 0) {
+      opts.onProgress?.(`${figureCorrected.length} 道题的图形尺寸按第二轮读数改正`);
+    }
+    page = rechecked.page;
+  }
+
+  const solver = await client.solve(page.questions);
 
   // 红笔簇数与逐题复核：模型说"这里打了个叉"，框里得有红笔才算
   const img = await loadImage(imagePath);
   const { mask } = redMask(img);
   const foundClusters = clusterMask(mask, img.width, img.height).length;
 
-  const verified = verifyMarks(repaired.page, mask, img.width, img.height);
+  const verified = verifyMarks(page, mask, img.width, img.height);
   if (verified.demoted.length > 0) {
     opts.onProgress?.(`${verified.demoted.length} 处标记在框里没找到红笔，已按"没批到"处理`);
   }
@@ -59,6 +73,7 @@ export async function runPage(
     if (repaired.inherited.includes(q.originalNo)) evidence.stemInherited = true;
     if (verified.demoted.includes(q.originalNo)) evidence.markUnverified = true;
     if (verified.noBox.includes(q.originalNo)) evidence.markNoBox = true;
+    if (figureCorrected.includes(q.originalNo)) evidence.figureCorrected = true;
     return { ...q, evidence };
   });
 }

@@ -46,6 +46,17 @@ export const RawPage = z.object({
   questions: z.array(RawQuestion).min(1),
 });
 
+/** 第三轮：只核图形尺寸，readable=false 表示图上数字看不清 */
+export const FiguresOutput = z.object({
+  figures: z.array(
+    z.object({
+      originalNo: z.string().nullish().transform((v) => v ?? ""),
+      readable: z.boolean().nullish().transform((v) => v ?? true),
+      figures: z.array(Figure).nullish().transform((v) => v ?? []),
+    }),
+  ),
+});
+
 export const SolverOutput = z.object({
   answers: z.array(
     z.object({
