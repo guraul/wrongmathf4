@@ -52,7 +52,7 @@
 
 ```
 wrongmathf4/
-├── package.json              # 根脚本：test / typecheck / dev / build / start / mask / judge / render
+├── package.json              # 根脚本：test / test:watch / typecheck / dev / build / start / mask / judge / render
 ├── pnpm-workspace.yaml       # 工作区定义 + 构建白名单（allowBuilds）
 ├── tsconfig.base.json        # 共享编译选项
 ├── vitest.config.ts          # 测试入口（packages/*/test）
