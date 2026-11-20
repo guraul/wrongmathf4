@@ -69,9 +69,8 @@ async function processBatch(id: string): Promise<void> {
   const record = await getBatch(id);
   if (record === null) return;
 
-  // Next 的 cwd 是 packages/web，.env 在仓库根
-  const envFile = envCandidates().find((candidate) => existsSync(candidate));
-  if (envFile !== undefined) loadEnv(envFile);
+  // 部署形态不同，cwd 也会不同，按候选路径挨个加载（先到先得，loadEnvFile 不覆盖已有变量）
+  for (const candidate of envCandidates()) loadEnv(candidate);
 
   const resolved = resolveProvider();
   if (!resolved.ok) {
