@@ -55,8 +55,8 @@ cp -r ~/sharp-wasm/node_modules/{sharp,@img,@emnapi,tslib,detect-libc} node_modu
 #    ~/wrongmath-app/.env
 
 # 5. 注册 runit 服务
-SVDIR=$PREFIX/var/service
-mkdir -p $SVDIR/wrongmath/log
+export SVDIR=$PREFIX/var/service
+mkdir -p $SVDIR/wrongmath/log ~/wrongmath-app.log
 cat > $SVDIR/wrongmath/run <<'RUN'
 #!/data/data/com.termux/files/usr/bin/sh
 export PORT=19238
