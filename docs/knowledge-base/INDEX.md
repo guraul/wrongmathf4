@@ -1,6 +1,6 @@
 # INDEX.md — 项目知识库索引总览
 
-> 最后更新: 2026-11-18 | commit: `c2667fc`
+> 最后更新: 2026-11-20 | commit: `a432666858ac8fe9f3e3477935a5b935a6f5db88`
 > 覆盖路径: `package.json`, `pnpm-workspace.yaml`, `.dsh/pipeline.json`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/render/html.ts`, `packages/core/src/render/figures.ts`, `packages/core/src/vlm/client.ts`, `packages/web/app/page.tsx`
 
 ## 使用说明
@@ -52,7 +52,7 @@
 
 ```
 wrongmathf4/
-├── package.json              # 根脚本：test / typecheck / dev / build
+├── package.json              # 根脚本：test / typecheck / dev / build / start / mask / judge / render
 ├── pnpm-workspace.yaml       # 工作区定义 + 构建白名单（allowBuilds）
 ├── tsconfig.base.json        # 共享编译选项
 ├── vitest.config.ts          # 测试入口（packages/*/test）
