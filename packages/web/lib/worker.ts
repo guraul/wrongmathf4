@@ -5,7 +5,9 @@ import { loadEnv } from "@wrongmath/core/env";
 import { renderBatch, runPage } from "@wrongmath/core/pipeline";
 import { resolveProvider } from "@wrongmath/core";
 
-import { batchDir, getBatch, repoRoot, saveBatch, writeWorksheet, type BatchRecord } from "./store";
+import { existsSync } from "node:fs";
+
+import { batchDir, envCandidates, getBatch, saveBatch, writeWorksheet, type BatchRecord } from "./store";
 
 /**
  * 进程内串行队列。
@@ -68,7 +70,8 @@ async function processBatch(id: string): Promise<void> {
   if (record === null) return;
 
   // Next 的 cwd 是 packages/web，.env 在仓库根
-  loadEnv(join(repoRoot(), ".env"));
+  const envFile = envCandidates().find((candidate) => existsSync(candidate));
+  if (envFile !== undefined) loadEnv(envFile);
 
   const resolved = resolveProvider();
   if (!resolved.ok) {

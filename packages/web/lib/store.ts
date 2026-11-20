@@ -57,6 +57,27 @@ export function assertBatchId(id: string): string {
   return id;
 }
 
+/**
+ * `.env` 可能在哪。
+ *
+ * 开发时 cwd 是 packages/web，`.env` 在仓库根；
+ * Next standalone 启动后 `server.js` 会把 cwd 切到它自己所在目录（packages/web），
+ * 而部署时 `.env` 通常放在应用根——所以两个位置都要试。
+ */
+export function envCandidates(start = process.cwd()): string[] {
+  const candidates = [join(repoRoot(start), ".env")];
+
+  let dir = start;
+  for (let i = 0; i < 4; i++) {
+    candidates.push(join(dir, ".env"));
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+
+  return [...new Set(candidates)];
+}
+
 export function batchDir(id: string): string {
   return join(dataDir(), "batches", assertBatchId(id));
 }
