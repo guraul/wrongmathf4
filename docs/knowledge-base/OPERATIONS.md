@@ -109,8 +109,22 @@ Next 默认只读 `packages/web/` 下的 `.env`，不加这一步会找不到 ke
 - `deploy/` 里有 Node 版的 systemd 单元与 macOS launchd 配置，说明见 `deploy/README.md`
 - 无反向代理、无数据库服务、无 worker 进程
 
+## 部署到 Android 手机（Termux，M8 起）
+
+2026-11-20 在小米 6（arm64 / Android 9 / Termux）上实际跑通并常驻，地址 `192.168.0.159:19238`。
+完整步骤见 `deploy/README.md` 的「Android / Termux」一节，这里只记关键结论：
+
+- **构建只在开发机做**：Next 的 SWC 没有 android-arm64 版本，手机侧只跑产物
+- **sharp 必须用 WASM 版**：`@img/sharp-wasm32` 放在应用 `node_modules` 顶层，实测单页预处理 4.6 秒
+- **sharp 必须保持外部依赖**：`next.config.mjs` 里对服务端构建显式 externals，否则被 webpack 内联后平台探测失效
+- **`.env` 放应用根**：standalone 启动后 cwd 会切到 `packages/web`，worker 按候选路径向上找
+- **服务托管用 runit**（`$PREFIX/var/service/wrongmath`），与手机上的 mihomo 等服务同一套机制
+- **手机没有 rsync**：部署走 `tar` 管道
+
 ## 已知陷阱
 
 - **多页合并**：一个批次产出恰好一份复刻卷，不同作业要分开上传。
 - **图片不要预先缩小**：V1 把图缩到 2000px 宽导致小字糊掉，V2 改成放大 2–3 倍再送模型。
 - **`low` 档位会压到 512×512**：模型接口的 `detail` 必须用 `original`，否则 10px 的字直接不可读。
+- **Android 上 `ps` 看不到进程命令行**：要杀掉占端口的进程，先从 `/proc/net/tcp` 取 socket inode，
+  再扫 `/proc/*/fd` 找持有者。`/tmp` 在 Termux 里不可写，临时文件放 `$HOME`。
