@@ -1,7 +1,7 @@
 # OPERATIONS.md — 运行、部署与踩坑
 
-> 最后更新: 2026-11-20 | commit: `2923aa9`
-> 覆盖路径: `packages/web/next.config.mjs`, `.dsh/pipeline.json`, `pnpm-workspace.yaml`, `packages/core/src/ingest/io.ts`, `packages/core/src/cli/mask.ts`
+> 最后更新: 2026-11-21 | commit: `2923aa9`
+> 覆盖路径: `packages/web/next.config.mjs`, `packages/web/lib/store.ts`, `packages/web/lib/worker.ts`, `.dsh/pipeline.json`, `pnpm-workspace.yaml`, `packages/core/src/ingest/io.ts`, `packages/core/src/cli/mask.ts`
 
 ## 环境变量
 
@@ -89,8 +89,9 @@ PORT=19240 pnpm dev            # 换端口（package.json 里的 ${PORT:-19238}�
 WRONGMATH_DATA_DIR=/tmp/wm pnpm dev   # 换数据目录
 ```
 
-`.env` 在仓库根，界面启动时会自己加载（`loadEnv(join(repoRoot(), ".env"))`）——
-Next 默认只读 `packages/web/` 下的 `.env`，不加这一步会找不到 key。
+`.env` 按候选路径加载：`envCandidates()`（`packages/web/lib/store.ts`）= 仓库根 + 从 cwd 向上最多
+4 层中含 `package.json` 的目录，`packages/web/lib/worker.ts` 在批次开始处理时逐个 `loadEnv`
+（先到先得）——Next 默认只读 `packages/web/` 下的 `.env`，不加这一步会找不到 key。
 
 ## 知识库 stamp 的语义
 
