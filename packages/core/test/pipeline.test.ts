@@ -63,18 +63,31 @@ describe("拼装题目", () => {
     expect(q?.solverAnswer).toBe("13.32 cm²");
   });
 
-  it("没标记但求解与作答不一致 → 补判为错", () => {
+  it("红笔卷（找到红笔簇）漏批兜底仍然生效", () => {
     const q = built.questions[1];
     expect(q?.verdict).toBe("wrong");
     expect(q?.evidence.reason).toBe("独立求解与作答不一致");
+  });
+
+  it("黑笔卷（没有任何红笔簇）不靠求解补判", () => {
+    const blackPen = buildQuestions({ page, solver, foundClusters: 0 });
+    const q = blackPen.questions[1];
+    expect(q?.verdict).toBe("unknown");
+    expect(String(q?.evidence.reason)).toContain("不据此判错");
+    expect(q?.solverAnswer).toBe("km²");
   });
 
   it("主观题不判定", () => {
     expect(built.questions[2]?.verdict).toBe("unknown");
   });
 
-  it("只有两类会进错题集", () => {
+  it("红笔卷上：老师打叉 + 漏批兜底，共两类进错题集", () => {
     expect(wrongQuestions(built.questions).map((q) => q.originalNo)).toEqual(["一（2）", "二.1"]);
+  });
+
+  it("黑笔卷上：只有老师打叉的题进错题集", () => {
+    const blackPen = buildQuestions({ page, solver, foundClusters: 0 });
+    expect(wrongQuestions(blackPen.questions).map((q) => q.originalNo)).toEqual(["一（2）"]);
   });
 
   it("自报标记数与簇数对账", () => {

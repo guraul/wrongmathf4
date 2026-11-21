@@ -149,6 +149,44 @@ export function questionScore(a: RawQuestion, b: RawQuestion): number {
 const MATCH_THRESHOLD = 0.5;
 
 /**
+ * 两道题是不是「同一题的不同抄法」——一方的题干完整包含另一方。
+ *
+ * 专门治这类噪声：同一道题一轮抄成「第3天 二（2） 用递等式计算……2.5×4.4×1.25」，
+ * 另一轮只抄「用递等式计算……2.5×4.4×1.25」。相似度算得出来但不够稳，
+ * 而「包含」关系很硬。长度差异过大的不算，免得把共享大题干的相邻小问并掉。
+ */
+export function isDuplicateStem(a: RawQuestion, b: RawQuestion): boolean {
+  // 题号对不上就先别合并：同一大题下几道小问常常共用一模一样的题干，
+  // 只靠题干会把它们并成一题（2026-11-17 那套几何卷就是这个形状）。
+  const ka = markKey(a.originalNo);
+  const kb = markKey(b.originalNo);
+  const numberCompatible = ka === kb || ka.endsWith(kb) || kb.endsWith(ka);
+  if (!numberCompatible) return false;
+
+  const left = stemCore(a.stem);
+  const right = stemCore(b.stem);
+  if (left === "" || right === "") return false;
+  if (left === right) return true;
+  const shorter = left.length <= right.length ? left : right;
+  const longer = left.length <= right.length ? right : left;
+  if (!longer.includes(shorter)) return false;
+  return shorter.length >= longer.length * 0.6;
+}
+
+/**
+ * 题干里真正区分题目内容的那一段：去掉「二、用递等式计算，能巧算的要巧算。」这类
+ * 大题公共引导语，以及行首编号，只留题面。
+ *
+ * 不做这一步的话，同一道题两轮抄法不同（一轮带「第3天 二（1）」，一轮只有「（1）…」）
+ * 会被当成两道题，题数虚增。
+ */
+export function stemCore(stem: string): string {
+  const parts = stem.split(/[。：:]/);
+  const tail = (parts[parts.length - 1] ?? stem).replace(/^[\s\d（(）).、]+/, "");
+  return normalizeStem(tail);
+}
+
+/**
  * 用动态规划把一轮的题对齐到底稿上，允许两边都有空位。
  *
  * 这比「按题号找」「按位置找」都稳：漏一道题只会在中间空出一格，
@@ -209,11 +247,32 @@ export function mergeRuns(runs: RawPage[]): ConsensusResult {
 
   const cleaned = runs.map(dedupePage);
 
+  // 题底选「旁证最多、独有最少」的那一轮，而不是题数最多的那一轮。
+  // 平局时取更短的那一轮：单轮独有的带标记题按不可信处理（精度优先），
+  // 只能靠多轮共识或第三轮补齐，不能靠「多抄了就该算数」。
+  // 原先取最多：某轮把同一题抄成两条、或多编出几道题时，它会成为底稿，
+  // 另一轮真实结果反而被当成"补题"追加——2026-11-21 第 1 页就是这么膨胀到 17 题的。
+  const corroborated = cleaned.map((page, i) =>
+    (page as RawPage).questions.filter((q) =>
+      cleaned.some(
+        (other, j) =>
+          i !== j &&
+          (other as RawPage).questions.some((candidate) => questionScore(candidate, q) >= MATCH_THRESHOLD),
+      ),
+    ).length,
+  );
+  const lengths = cleaned.map((page) => (page as RawPage).questions.length);
   let spineIndex = 0;
   for (let i = 1; i < cleaned.length; i++) {
-    if ((cleaned[i] as RawPage).questions.length > (cleaned[spineIndex] as RawPage).questions.length) {
-      spineIndex = i;
-    }
+    const unI = (lengths[i] ?? 0) - (corroborated[i] ?? 0);
+    const unBest = (lengths[spineIndex] ?? 0) - (corroborated[spineIndex] ?? 0);
+    const better =
+      (corroborated[i] ?? 0) !== (corroborated[spineIndex] ?? 0)
+        ? (corroborated[i] ?? 0) > (corroborated[spineIndex] ?? 0)
+        : unI !== unBest
+          ? unI < unBest
+          : (lengths[i] ?? 0) < (lengths[spineIndex] ?? 0);
+    if (better) spineIndex = i;
   }
 
   const spine = cleaned[spineIndex] as RawPage;
@@ -250,6 +309,20 @@ export function mergeRuns(runs: RawPage[]): ConsensusResult {
       const q = run.questions[extraIndex];
       if (q === undefined) continue;
 
+      // 只有这一轮抄出来的题：带标记的要求别轮能找到同一题才补进来，无标记的允许补。
+      // 单轮独有的带标记题基本都是模型看错/编出来的（2026-11-21 第 1 页多出来的 7 道
+      // 就是这么来的）；无标记的题不影响错题集，漏抄的可能性更大。
+      // 只对「判错」要求旁证：判错会直接进错题卷，假错题代价最高；
+      // 「打勾/没标记」的题多留一条只是多一点噪声，不会让家长多做错题。
+      if (others.length > 0 && q.teacherMark === "wrong") {
+        const corroborated = others.some(
+          (other) =>
+            other !== run &&
+            other.questions.some((candidate) => questionScore(candidate, q) >= MATCH_THRESHOLD),
+        );
+        if (!corroborated) continue;
+      }
+
       const marks: RawMark[] = [q.teacherMark];
       for (const [otherIndex, otherRun] of others.entries()) {
         if (otherIndex === runIndex) continue;
@@ -263,7 +336,24 @@ export function mergeRuns(runs: RawPage[]): ConsensusResult {
     }
   }
 
-  return { page: { questions }, votes, spineIndex };
+  // 收尾去重：对齐没配上的重复题（同一题换个前缀抄）在这里并掉，
+  // 否则它们会被当成"另一轮独有的题"追加，题数虚增（2026-11-21 第 2 页 10→14 就是这么来的）。
+  const deduped: ResolvedQuestion[] = [];
+  const dedupedVotes: Verdict3[] = [];
+  for (const [index, q] of questions.entries()) {
+    const twinIndex = deduped.findIndex((existing) => isDuplicateStem(existing, q));
+    if (twinIndex >= 0) {
+      const existing = deduped[twinIndex] as ResolvedQuestion;
+      const vote = voteMarks([existing.teacherMark, q.teacherMark]);
+      deduped[twinIndex] = { ...existing, teacherMark: vote.mark };
+      dedupedVotes[twinIndex] = vote;
+      continue;
+    }
+    deduped.push(q);
+    dedupedVotes.push(votes[index] as Verdict3);
+  }
+
+  return { page: { questions: deduped }, votes: dedupedVotes, spineIndex };
 }
 
 /**

@@ -19,6 +19,8 @@ export interface JudgeInput {
   studentAnswer: string | null;
   solverAnswer: string | null;
   rules: RuleCheck[];
+  /** 是否允许用求解比对补判错题；缺省 true（单测直调时） */
+  canPromoteBySolver?: boolean;
 }
 
 export interface JudgeResult {
@@ -36,6 +38,7 @@ const BASE_CONFIDENCE = {
 
 export function decide(input: JudgeInput): JudgeResult {
   const { teacherMark, subjective, studentAnswer, solverAnswer, rules } = input;
+  const canPromoteBySolver = input.canPromoteBySolver ?? true;
   const rulesFailed = rules.filter((r) => !r.ok);
 
   if (subjective) {
@@ -94,6 +97,17 @@ export function decide(input: JudgeInput): JudgeResult {
   }
 
   if (cmp === "differ") {
+    // 「漏批兜底」：老师没批到，但独立求解和学生作答对不上，补判为错。
+    // 只在红笔机制可用时启用——那说明卷子确实是老师用红笔批的，掩膜能对账，
+    // 漏批是真漏批。黑笔卷（整页 0% 红笔）上这条分支会把学生答案的转录噪声
+    // 当成错因：2026-11-21 一页因此报了 14 道错题（实际 4 道）。
+    if (!canPromoteBySolver) {
+      return {
+        verdict: "unknown",
+        confidence: BASE_CONFIDENCE.unknown,
+        evidence: { reason: "老师没批，独立求解与作答不一致——卷面非红笔批改，不据此判错", studentAnswer, solverAnswer },
+      };
+    }
     return {
       verdict: "wrong",
       confidence: BASE_CONFIDENCE.solved,
