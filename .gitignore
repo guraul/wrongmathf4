@@ -59,3 +59,6 @@ test/screenshots/
 
 # 交付流程本地状态（审核记录 / 跳过审计）
 .dsh-web/
+
+# 一次性对比实验的产物（图 + 两份 HTML），不入库
+test/compare/

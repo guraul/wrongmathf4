@@ -17,7 +17,12 @@ export interface BuildResult {
   claimedMarks: number;
 }
 
-function toQuestion(q: RawQuestion, sequence: number, solverAnswer: string | null): Question {
+function toQuestion(
+  q: RawQuestion,
+  sequence: number,
+  solverAnswer: string | null,
+  canPromoteBySolver: boolean,
+): Question {
   // 正常情况下投票后已经没有 unread；真漏到这一步就按"没批到"处理，但不假装读过
   const mark: TeacherMark = q.teacherMark === "unread" ? "none" : q.teacherMark;
 
@@ -27,6 +32,7 @@ function toQuestion(q: RawQuestion, sequence: number, solverAnswer: string | nul
     studentAnswer: q.studentAnswer,
     solverAnswer,
     rules: checkFigures(q.figures),
+    canPromoteBySolver,
   });
 
   return {
@@ -57,7 +63,7 @@ export function buildQuestions(input: BuildInput): BuildResult {
 
   const questions = input.page.questions.map((q, i) => {
     const solverAnswer = input.solver.get(q.originalNo) ?? null;
-    const built = toQuestion(q, i + 1, solverAnswer);
+    const built = toQuestion(q, i + 1, solverAnswer, input.foundClusters > 0);
 
     if (built.verdict === "unknown") return built;
 

@@ -1,0 +1,28 @@
+{
+  "source": "2026-11-21",
+  "note": "人工逐题核对老师的 ✗（黑笔批改）：两张卷子共 6 道错题。",
+  "wrong": [
+    { "originalNo": "第1天一(1)", "kind": "vertical", "answer": "9.2", "why": "3.85×2.4=9.24，保留一位小数 9.2；学生写 0.9" },
+    { "originalNo": "第1天二(3)", "kind": "arithmetic", "answer": "68", "why": "0.68×55=6.8×5.5，原式=6.8×(4.5+5.5)=68；学生写 6.8" },
+    { "originalNo": "第2天二(1)", "kind": "arithmetic", "answer": "55.3", "why": "24.5÷0.5=49，49+6.3=55.3；学生写 11.2" },
+    { "originalNo": "第2天二(2)", "kind": "arithmetic", "answer": "20", "why": "0.25×1.25×64=(0.25×4)×(1.25×8)×2=20；学生写 2" },
+    { "originalNo": "第3天二(2)", "kind": "arithmetic", "answer": "13.75", "why": "10×1.1×1.25=13.75；学生写 1.375" },
+    { "originalNo": "第4天二(2)", "kind": "arithmetic", "answer": "10", "why": "(12.5×0.8)×(2.5×0.4)=10×1=10；学生写 100" }
+  ],
+  "correct": [
+    { "originalNo": "第1天二(1)", "answer": "25.2" },
+    { "originalNo": "第1天二(2)", "answer": "100" },
+    { "originalNo": "第1天三(1)", "answer": "4" },
+    { "originalNo": "第2天一(1)", "answer": "5.4" },
+    { "originalNo": "第2天二(3)", "answer": "92" },
+    { "originalNo": "第2天三(1)", "answer": "10" },
+    { "originalNo": "第3天一(1)", "answer": "28.1" },
+    { "originalNo": "第3天二(1)", "answer": "8" },
+    { "originalNo": "第3天二(3)", "answer": "48" },
+    { "originalNo": "第3天三(1)", "answer": "40" },
+    { "originalNo": "第4天一(1)", "answer": "5.2" },
+    { "originalNo": "第4天二(1)", "answer": "20.1" },
+    { "originalNo": "第4天二(3)", "answer": "37" },
+    { "originalNo": "第4天三(1)", "answer": "10" }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "questions": [
+    {
+      "originalNo": "一（1）",
+      "kind": "fill",
+      "stem": "3.85×2.4≈（用“四舍五入”法保留一位小数）",
+      "figures": [],
+      "teacherMark": "wrong",
+      "markBox": [
+        0.555,
+        0.215,
+        0.06,
+        0.03
+      ],
+      "studentAnswer": "0.9",
+      "subjective": false
+    },
+    {
+      "originalNo": "二（1）",
+      "kind": "fill",
+      "stem": "16.8÷0.6−3.5×0.8",
+      "figures": [],
+      "teacherMark": "none",
+      "markBox": null,
+      "studentAnswer": "25.2",
+      "subjective": false
+    },
+    {
+      "originalNo": "二（2）",
+      "kind": "fill",
+      "stem": "1.25×2.5×32",
+      "figures": [],
+      "teacherMark": "none",
+      "markBox": null,
+      "studentAnswer": "100",
+      "subjective": false
+    },
+    {
+      "originalNo": "二（3）",
+      "kind": "fill",
+      "stem": "6.8×4.5+0.68×55",
+      "figures": [],
+      "teacherMark": "wrong",
+      "markBox": [
+        0.805,
+        0.345,
+        0.05,
+        0.03
+      ],
+      "studentAnswer": "6.8",
+      "subjective": false
+    },
+    {
+      "originalNo": "三（1）",
+      "kind": "short",
+      "stem": "7.5减去2.7的差，除12.6与6.6的和，商是多少？",
+      "figures": [],
+      "teacherMark": "none",
+      "markBox": null,
+      "studentAnswer": "4",
+      "subjective": false
+    },
+    {
+      "originalNo": "一（1）",
+      "kind": "fill",
+      "stem": "8.64÷1.6=",
+      "figures": [],
+      "teacherMark": "none",
+      "markBox": null,
+      "studentAnswer": "5.4",
+      "subjective": false
+    },
+    {
+      "originalNo": "二（1）",
+      "kind": "fill",
+      "stem": "24.5÷0.5+4.2×1.5",
+      "figures": [],
+      "teacherMark": "wrong",
+      "markBox": [
+        0.44,
+        0.775,
+        0.05,
+        0.03
+      ],
+      "studentAnswer": "11.2",
+      "subjective": false
+    },
+    {
+      "originalNo": "二（2）",
+      "kind": "fill",
+      "stem": "0.25×1.25×64",
+      "figures": [],
+      "teacherMark": "wrong",
+      "markBox": [
+        0.59,
+        0.82,
+        0.05,
+        0.03
+      ],
+      "studentAnswer": "2",
+      "subjective": false
+    },
+    {
+      "originalNo": "二（3）",
+      "kind": "fill",
+      "stem": "9.2×9.9+0.92",
+      "figures": [],
+      "teacherMark": "none",
+      "markBox": null,
+      "studentAnswer": "92",
+      "subjective": false
+    },
+    {
+      "originalNo": "三（1）",
+      "kind": "short",
+      "stem": "15.4与4.6的和，除以2.5乘0.8的积，商是多少？",
+      "figures": [],
+      "teacherMark": "none",
+      "markBox": null,
+      "studentAnswer": "10",
+      "subjective": false
+    }
+  ]
+}

@@ -37,9 +37,17 @@ describe("三票收敛", () => {
     expect(r.confidence).toBeCloseTo(0.85);
   });
 
-  it("没标记，求解与作答不一致 → wrong", () => {
-    const r = decide({ ...base, studentAnswer: "7.92", solverAnswer: "13.32" });
-    expect(r.verdict).toBe("wrong");
+  it("黑笔卷（禁用求解兜底）没标记 + 求解不一致 → unknown", () => {
+    const r = decide({
+      ...base,
+      studentAnswer: "7.92",
+      solverAnswer: "13.32",
+      canPromoteBySolver: false,
+    });
+    expect(r.verdict).toBe("unknown");
+    // 曾经这里补判为 wrong：2026-11-21 真机上红笔复核失效后题题落到这条分支，
+    // 转录噪声被当成错因，一页报了 14 道错题。改为只记录、不判错。
+    expect(String(r.evidence.reason)).toContain("不据此判错");
   });
 
   it("没标记但规则校验失败 → wrong", () => {

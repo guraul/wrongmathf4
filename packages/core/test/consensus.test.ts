@@ -91,7 +91,7 @@ describe("标记投票", () => {
 });
 
 describe("多轮合并", () => {
-  it("正文取题数最多的那轮，标记取多数", () => {
+  it("正文取旁证最多的那轮，标记取多数", () => {
     const run1 = page([
       ["一（1）", "right"],
       ["一（2）", "wrong"],
@@ -104,20 +104,23 @@ describe("多轮合并", () => {
 
     const merged = mergeRuns([run1, run2]);
     expect(merged.page.questions).toHaveLength(3);
-    expect(merged.spineIndex).toBe(1);
+    // 两轮互相旁证数相同，取独有更少、更短的那轮做底稿（run1）
+    expect(merged.spineIndex).toBe(0);
     // 一（2）两轮不一致 → none（保守）
     expect(merged.page.questions.find((q) => q.originalNo === "一（2）")?.teacherMark).toBe("none");
     expect(merged.page.questions.find((q) => q.originalNo === "一（1）")?.teacherMark).toBe("right");
   });
 
-  it("某轮少了一题时，多出来的那题仍保留", () => {
+  it("某轮漏抄的带标记题不被采信（精度优先，交给第三轮补）", () => {
     const run1 = page([
       ["一（1）", "right"],
       ["一（2）", "wrong"],
     ]);
     const run2 = page([["一（1）", "right"]]);
     const merged = mergeRuns([run1, run2]);
-    expect(merged.page.questions.map((q) => q.originalNo)).toEqual(["一（1）", "一（2）"]);
+    // 一（2）只有一轮看到、带 wrong 标记：单票不可信，丢掉。
+    // 2026-11-21 真机：不丢的话，模型编出来的题会被当成真错题塞进错题卷。
+    expect(merged.page.questions.map((q) => q.originalNo)).toEqual(["一（1）"]);
   });
 
   it("空输入直接报错", () => {
