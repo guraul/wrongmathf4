@@ -3,8 +3,11 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { prepareForModel } from "../src/ingest/io.js";
+import { loadImage, prepareForModel } from "../src/ingest/io.js";
+import { redMask } from "../src/ingest/pixels.js";
+import { clusterMask } from "../src/judge/cluster.js";
 import { transcribeWithConsensus } from "../src/judge/consensus.js";
+import { countRedVerifiedMarks } from "../src/judge/ink.js";
 import { buildQuestions, wrongQuestions } from "../src/judge/pipeline.js";
 import { VlmClient } from "../src/vlm/client.js";
 import { resolveProvider } from "../src/vlm/providers.js";
@@ -52,7 +55,24 @@ describe.skipIf(!provider.ok)("golden：2026-11-17 两张卷子", () => {
       // 两轮投票：这个模型对红笔符号的读取不稳定，单次结果不能直接信
       const consensus = await transcribeWithConsensus(() => client.transcribe(dataUrl));
       const solver = await client.solve(consensus.page.questions);
-      const { questions } = buildQuestions({ page: consensus.page, solver, foundClusters: 1 });
+
+      // 按真实链路算红笔信号：红笔批改的卷子应当过闸，漏批兜底照常生效
+      const img = await loadImage(`${FIXTURES}${page}`);
+      const { mask } = redMask(img);
+      const clusters = clusterMask(mask, img.width, img.height);
+      const redVerifiedMarks = countRedVerifiedMarks(
+        consensus.page,
+        clusters,
+        img.width,
+        img.height,
+      );
+
+      const { questions } = buildQuestions({
+        page: consensus.page,
+        solver,
+        foundClusters: clusters.length,
+        redVerifiedMarks,
+      });
 
       for (const q of wrongQuestions(questions)) found.add(q.originalNo);
     }

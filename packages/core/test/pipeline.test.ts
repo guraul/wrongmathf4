@@ -50,7 +50,7 @@ const solver = new Map([
 ]);
 
 describe("拼装题目", () => {
-  const built = buildQuestions({ page, solver, foundClusters: 1 });
+  const built = buildQuestions({ page, solver, foundClusters: 1, redVerifiedMarks: 1 });
 
   it("保留原卷题号与顺序", () => {
     expect(built.questions.map((q) => q.originalNo)).toEqual(["一（2）", "二.1", "三.1"]);
@@ -63,14 +63,14 @@ describe("拼装题目", () => {
     expect(q?.solverAnswer).toBe("13.32 cm²");
   });
 
-  it("红笔卷（找到红笔簇）漏批兜底仍然生效", () => {
+  it("红笔卷（标记框内压到红笔）漏批兜底仍然生效", () => {
     const q = built.questions[1];
     expect(q?.verdict).toBe("wrong");
     expect(q?.evidence.reason).toBe("独立求解与作答不一致");
   });
 
-  it("黑笔卷（没有任何红笔簇）不靠求解补判", () => {
-    const blackPen = buildQuestions({ page, solver, foundClusters: 0 });
+  it("黑笔卷（整页无红笔）不靠求解补判", () => {
+    const blackPen = buildQuestions({ page, solver, foundClusters: 0, redVerifiedMarks: 0 });
     const q = blackPen.questions[1];
     expect(q?.verdict).toBe("unknown");
     expect(String(q?.evidence.reason)).toContain("不据此判错");
@@ -85,8 +85,34 @@ describe("拼装题目", () => {
     expect(wrongQuestions(built.questions).map((q) => q.originalNo)).toEqual(["一（2）", "二.1"]);
   });
 
+  it("红章/页眉带进的零星红簇（少于标记数）不启动兜底", () => {
+    // 四个题都声称被批过，但整页只有 2 簇红笔——不像红笔批改的卷子（真机红笔卷是 7 簇 / 2 个标记）
+    const marked = RawPage.parse({
+      questions: [
+        { originalNo: "一（1）", kind: "short", stem: "甲", teacherMark: "right", studentAnswer: "1" },
+        { originalNo: "一（2）", kind: "short", stem: "乙", teacherMark: "wrong", studentAnswer: "2" },
+        { originalNo: "一（3）", kind: "short", stem: "丙", teacherMark: "right", studentAnswer: "3" },
+        { originalNo: "一（4）", kind: "short", stem: "丁", teacherMark: "right", studentAnswer: "4" },
+      ],
+    });
+    const solvers = new Map([
+      ["一（1）", "1"],
+      ["一（2）", "9"],
+      ["一（3）", "3"],
+      ["一（4）", "40"],
+    ]);
+    const builtRed = buildQuestions({
+      page: marked,
+      solver: solvers,
+      foundClusters: 2,
+      redVerifiedMarks: 0,
+    });
+    // 一（4）求解与作答不一致，但红簇不足 → 不补判
+    expect(wrongQuestions(builtRed.questions).map((q) => q.originalNo)).toEqual(["一（2）"]);
+  });
+
   it("黑笔卷上：只有老师打叉的题进错题集", () => {
-    const blackPen = buildQuestions({ page, solver, foundClusters: 0 });
+    const blackPen = buildQuestions({ page, solver, foundClusters: 0, redVerifiedMarks: 0 });
     expect(wrongQuestions(blackPen.questions).map((q) => q.originalNo)).toEqual(["一（2）"]);
   });
 

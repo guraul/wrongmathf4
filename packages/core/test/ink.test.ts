@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { darkRatioInBox, inspectMarks, redRatioInBox } from "../src/judge/ink.js";
+import { countRedVerifiedMarks, darkRatioInBox, inspectMarks, redRatioInBox } from "../src/judge/ink.js";
 import type { RgbaImage } from "../src/ingest/pixels.js";
 import type { RawPage } from "../src/vlm/parse.js";
 
@@ -127,5 +127,35 @@ describe("批改符号体检（只记录，不改判定）", () => {
     const { report } = inspectMarks(page, blank, mask);
     expect(report.noBox).toEqual([]);
     expect(report.emptyBoxes).toEqual([]);
+  });
+});
+
+describe("标记框内是否压着红笔", () => {
+  const cluster = (x: number, y: number, w: number, h: number) => ({ x, y, w, h, cells: 10 });
+
+  it("框与红簇重叠才算被证实", () => {
+    const page: RawPage = {
+      questions: [
+        question("一（1）", "wrong", [0.1, 0.1, 0.1, 0.1]),
+        question("一（2）", "wrong", [0.7, 0.7, 0.1, 0.1]),
+      ],
+    };
+    // 红簇在左上角 (10,10)，只压住第一题的框
+    expect(countRedVerifiedMarks(page, [cluster(10, 10, 6, 6)], W, H)).toBe(1);
+  });
+
+  it("红簇离标记框很远（红章、页眉）不算", () => {
+    const page: RawPage = { questions: [question("一（1）", "wrong", [0.1, 0.8, 0.1, 0.1])] };
+    expect(countRedVerifiedMarks(page, [cluster(10, 10, 6, 6)], W, H)).toBe(0);
+  });
+
+  it("没给框的标记不算被证实", () => {
+    const page: RawPage = { questions: [question("一（1）", "wrong", null)] };
+    expect(countRedVerifiedMarks(page, [cluster(0, 0, 100, 100)], W, H)).toBe(0);
+  });
+
+  it("没标记的题不参与", () => {
+    const page: RawPage = { questions: [question("一（1）", "none", [0.1, 0.1, 0.1, 0.1])] };
+    expect(countRedVerifiedMarks(page, [cluster(10, 10, 6, 6)], W, H)).toBe(0);
   });
 });

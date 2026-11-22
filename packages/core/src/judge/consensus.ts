@@ -242,6 +242,45 @@ export function alignRun(spine: RawQuestion[], run: RawQuestion[]): {
  * 把多轮转写合成一份：正文取题数最多的那一轮，其余轮次按相似度对齐后投票。
  * 对齐不上的题（另一轮多读出来的）追加到末尾。
  */
+/**
+ * 把重复抄法的题并掉（题面核心相同 + 题号兼容）。
+ *
+ * 重复项只是"同一题换了个抄法"，它那一票已经投过；若再和已收敛的判定对投，
+ * 两票平局会把「错」翻成「没批」（2026-11-21 黑笔卷上会漏一道真错题）。
+ * 所以已有明确判定时以它为准，只在它还是 none/unread 时采纳重复项的标记。
+ */
+export function dedupeResolved(
+  questions: ResolvedQuestion[],
+  votes: Verdict3[],
+): { questions: ResolvedQuestion[]; votes: Verdict3[] } {
+  const deduped: ResolvedQuestion[] = [];
+  const dedupedVotes: Verdict3[] = [];
+
+  for (const [index, q] of questions.entries()) {
+    const twinIndex = deduped.findIndex((existing) => isDuplicateStem(existing, q));
+    if (twinIndex >= 0) {
+      const existing = deduped[twinIndex] as ResolvedQuestion;
+      if (existing.teacherMark === "wrong" || existing.teacherMark === "right") continue;
+
+      // 已收敛的是"没批"时，重复项带了标记就采纳它（它自己那票已经投过，不再平局重投）；
+      // 否则保持"没批"。
+      if (q.teacherMark === "wrong" || q.teacherMark === "right") {
+        const previous = dedupedVotes[twinIndex];
+        deduped[twinIndex] = { ...existing, teacherMark: q.teacherMark };
+        dedupedVotes[twinIndex] = {
+          mark: q.teacherMark,
+          votes: [...(previous?.votes ?? []), q.teacherMark],
+        };
+      }
+      continue;
+    }
+    deduped.push(q);
+    dedupedVotes.push(votes[index] as Verdict3);
+  }
+
+  return { questions: deduped, votes: dedupedVotes };
+}
+
 export function mergeRuns(runs: RawPage[]): ConsensusResult {
   if (runs.length === 0) throw new Error("至少要有一轮转写结果");
 
@@ -338,20 +377,7 @@ export function mergeRuns(runs: RawPage[]): ConsensusResult {
 
   // 收尾去重：对齐没配上的重复题（同一题换个前缀抄）在这里并掉，
   // 否则它们会被当成"另一轮独有的题"追加，题数虚增（2026-11-21 第 2 页 10→14 就是这么来的）。
-  const deduped: ResolvedQuestion[] = [];
-  const dedupedVotes: Verdict3[] = [];
-  for (const [index, q] of questions.entries()) {
-    const twinIndex = deduped.findIndex((existing) => isDuplicateStem(existing, q));
-    if (twinIndex >= 0) {
-      const existing = deduped[twinIndex] as ResolvedQuestion;
-      const vote = voteMarks([existing.teacherMark, q.teacherMark]);
-      deduped[twinIndex] = { ...existing, teacherMark: vote.mark };
-      dedupedVotes[twinIndex] = vote;
-      continue;
-    }
-    deduped.push(q);
-    dedupedVotes.push(votes[index] as Verdict3);
-  }
+  const { questions: deduped, votes: dedupedVotes } = dedupeResolved(questions, votes);
 
   return { page: { questions: deduped }, votes: dedupedVotes, spineIndex };
 }
