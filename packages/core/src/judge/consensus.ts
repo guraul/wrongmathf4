@@ -253,29 +253,60 @@ export function dedupeResolved(
   questions: ResolvedQuestion[],
   votes: Verdict3[],
 ): { questions: ResolvedQuestion[]; votes: Verdict3[] } {
+  // 先按题面归组，再逐组定夺：这样同一题出现 3 个以上抄法时，
+  // 结果与抄写顺序无关（原先先到先得，✗ 和 ✓ 谁在前谁赢）。
+  interface Group {
+    question: ResolvedQuestion;
+    /** 归组时各成员自己的判定 */
+    marks: TeacherMark[];
+    /** 单成员组沿用原票；只有真合并过才重建，避免抹掉跨轮分歧信息 */
+    votes: Verdict3[];
+    merged: boolean;
+  }
+  const groups: Group[] = [];
+
+  for (const [index, q] of questions.entries()) {
+    const vote = votes[index] as Verdict3 | undefined;
+    const twin = groups.find((group) => isDuplicateStem(group.question, q));
+    if (twin !== undefined) {
+      twin.merged = true;
+      twin.marks.push(q.teacherMark);
+      if (vote !== undefined) twin.votes.push(vote);
+      continue;
+    }
+    groups.push({
+      question: q,
+      marks: [q.teacherMark],
+      votes: vote === undefined ? [] : [vote],
+      merged: false,
+    });
+  }
+
   const deduped: ResolvedQuestion[] = [];
   const dedupedVotes: Verdict3[] = [];
 
-  for (const [index, q] of questions.entries()) {
-    const twinIndex = deduped.findIndex((existing) => isDuplicateStem(existing, q));
-    if (twinIndex >= 0) {
-      const existing = deduped[twinIndex] as ResolvedQuestion;
-      if (existing.teacherMark === "wrong" || existing.teacherMark === "right") continue;
-
-      // 已收敛的是"没批"时，重复项带了标记就采纳它（它自己那票已经投过，不再平局重投）；
-      // 否则保持"没批"。
-      if (q.teacherMark === "wrong" || q.teacherMark === "right") {
-        const previous = dedupedVotes[twinIndex];
-        deduped[twinIndex] = { ...existing, teacherMark: q.teacherMark };
-        dedupedVotes[twinIndex] = {
-          mark: q.teacherMark,
-          votes: [...(previous?.votes ?? []), q.teacherMark],
-        };
-      }
+  for (const group of groups) {
+    if (!group.merged) {
+      deduped.push(group.question);
+      dedupedVotes.push(group.votes[0] ?? { mark: group.question.teacherMark, votes: [] });
       continue;
     }
-    deduped.push(q);
-    dedupedVotes.push(votes[index] as Verdict3);
+
+    const marked = new Set(
+      group.marks.filter((mark): mark is TeacherMark => mark === "wrong" || mark === "right"),
+    );
+    const unread = group.votes.some((vote) => vote.votes.includes("unread"));
+
+    // 两种不同标记同时出现 → 读不准，按"没批"处理，不猜
+    const resolved: TeacherMark = marked.size === 1 ? ([...marked][0] as TeacherMark) : "none";
+
+    deduped.push({ ...group.question, teacherMark: resolved });
+    // 合并后的票记成干净的一票，避免制造"假分歧"白跑第三轮；
+    // 真有 unread 才保留它，让第三轮照常补。
+    dedupedVotes.push({
+      mark: resolved,
+      votes: unread ? [resolved, "unread"] : [resolved],
+    });
   }
 
   return { questions: deduped, votes: dedupedVotes };

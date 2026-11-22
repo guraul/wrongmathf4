@@ -85,6 +85,21 @@ describe("拼装题目", () => {
     expect(wrongQuestions(built.questions).map((q) => q.originalNo)).toEqual(["一（2）", "二.1"]);
   });
 
+  it("模型声称 0 个标记时，再多的红簇也不开闸", () => {
+    const unmarked = RawPage.parse({
+      questions: [
+        { originalNo: "一（1）", kind: "short", stem: "甲", teacherMark: "none", studentAnswer: "1" },
+        { originalNo: "一（2）", kind: "short", stem: "乙", teacherMark: "none", studentAnswer: "2" },
+      ],
+    });
+    const solvers = new Map([
+      ["一（1）", "9"],
+      ["一（2）", "9"],
+    ]);
+    const built = buildQuestions({ page: unmarked, solver: solvers, foundClusters: 5, redVerifiedMarks: 0 });
+    expect(wrongQuestions(built.questions)).toHaveLength(0);
+  });
+
   it("红章/页眉带进的零星红簇（少于标记数）不启动兜底", () => {
     // 四个题都声称被批过，但整页只有 2 簇红笔——不像红笔批改的卷子（真机红笔卷是 7 簇 / 2 个标记）
     const marked = RawPage.parse({
