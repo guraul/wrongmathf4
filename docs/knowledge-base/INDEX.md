@@ -1,6 +1,6 @@
 # INDEX.md — 项目知识库索引总览
 
-> 最后更新: 2026-11-21 | commit: `01d748b`
+> 最后更新: 2026-11-22 | commit: `412479d`
 > 覆盖路径: `package.json`, `pnpm-workspace.yaml`, `.dsh/pipeline.json`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/render/html.ts`, `packages/core/src/render/figures.ts`, `packages/core/src/vlm/client.ts`, `packages/web/app/page.tsx`
 
 ## 使用说明
@@ -32,9 +32,9 @@
 |---|---|
 | 批次/页面/题目/图形四类契约 | 现行（`packages/core/src/schema.ts`） |
 | 图片放大、红笔掩膜 | 现行（`packages/core/src/ingest/`） |
-
-| HTML 复刻渲染 | 目标（M3–M4） |
-| 上传/列表/预览/下载界面 | 目标（M5） |
+| 多轮投票与三票判定 | 现行（`packages/core/src/judge/`） |
+| HTML 复刻渲染 | 现行（`packages/core/src/render/`） |
+| 上传 / 列表 / 错题清单 / 下载界面 | 现行（`packages/web/app/`） |
 
 ## 技术栈
 
@@ -45,8 +45,8 @@
 | Web | Next.js 14 App Router | 页面与 API 路由同进程 |
 | 契约 | zod | 模型输出必须过校验才进管线 |
 | 测试 | vitest | 只测纯逻辑，不测浏览器 |
-| 存储 | better-sqlite3（目标） | M0 尚未引入 |
-| 模型 | DeepSeek Flash（目标） | 官方 id `deepseek-flash`，视觉输入 |
+| 存储 | JSON 文件存储 | 现行（`packages/web/lib/store.ts`），better-sqlite3 未引入 |
+| 模型 | `deepseek-v4.1-flash` | 默认走 opencode go 提供方（视觉输入）；备用 DeepSeek 官方 `deepseek-flash` |
 
 ## 仓库拓扑
 
@@ -79,9 +79,9 @@ wrongmathf4/
 | 图像输入 | `packages/core/src/ingest/` | 摆正、放大、红笔掩膜 |
 | 识别 | `packages/core/src/vlm/` | 图片 → 结构化题目（两轮：转写 / 独立求解） |
 | 判定 | `packages/core/src/judge/` | 三票收敛、答案比对、掩膜聚类与对账 |
-| 渲染 | `packages/core/src/render/`（待建） | 结构化数据 → HTML |
-| 图形 | `packages/core/src/figures/`（待建） | 参数 → SVG |
-| 接口 | `packages/web/app/api/`（待建） | 上传、查询、下载 |
+| 渲染 | `packages/core/src/render/` | 结构化数据 → HTML |
+| 图形 | `packages/core/src/render/figures.ts` | 参数 → SVG |
+| 接口 | `packages/web/app/api/` | 上传、查询、下载 |
 | 界面 | `packages/web/app/` | 上传页、列表页、预览页 |
 
 ## 速查表
