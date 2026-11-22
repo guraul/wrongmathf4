@@ -3,7 +3,7 @@ import { loadImage } from "../ingest/io.js";
 import { redMask } from "../ingest/pixels.js";
 import { clusterMask } from "../judge/cluster.js";
 import { transcribeWithConsensus } from "../judge/consensus.js";
-import { inspectMarks } from "../judge/ink.js";
+import { countRedVerifiedMarks, inspectMarks } from "../judge/ink.js";
 import { buildQuestions } from "../judge/pipeline.js";
 import { repairStems } from "../judge/stem.js";
 import { renderWorksheet, type RenderOptions } from "../render/html.js";
@@ -42,16 +42,28 @@ export async function runPage(
   // 批改符号的墨迹体检：只记录不判定（框和颜色都不能作为否定证据，见 ink.ts 顶部说明）
   const img = await loadImage(imagePath);
   const { mask } = redMask(img);
-  const foundClusters = clusterMask(mask, img.width, img.height).length;
+  const clusters = clusterMask(mask, img.width, img.height);
+  const foundClusters = clusters.length;
 
   const inspected = inspectMarks(repaired.page, img, mask);
+  const redVerifiedMarks = countRedVerifiedMarks(repaired.page, clusters, img.width, img.height);
+  if (redVerifiedMarks === 0 && foundClusters > 0) {
+    opts.onProgress?.(
+      `找到 ${foundClusters} 处红笔，但没有一处压在批改符号上——按"非红笔批改"处理，不启用漏批兜底`,
+    );
+  }
   if (inspected.report.emptyBoxes.length > 0) {
     opts.onProgress?.(
       `${inspected.report.emptyBoxes.length} 处标记的框里没检到墨迹，已记录（不影响判定）`,
     );
   }
 
-  const { questions } = buildQuestions({ page: inspected.page, solver, foundClusters });
+  const { questions } = buildQuestions({
+    page: inspected.page,
+    solver,
+    foundClusters,
+    redVerifiedMarks,
+  });
 
   // 把投票与补题的来龙去脉记进 evidence，排查「为什么这题被判 none」时有据可查
   return questions.map((q, index) => {
@@ -61,6 +73,7 @@ export async function runPage(
     if (repaired.inherited.includes(q.originalNo)) evidence.stemInherited = true;
     if (inspected.report.emptyBoxes.includes(q.originalNo)) evidence.markEmptyBox = true;
     if (inspected.report.noBox.includes(q.originalNo)) evidence.markNoBox = true;
+    if (inspected.report.noRedInk.includes(q.originalNo)) evidence.markNoRedInk = true;
     return { ...q, evidence };
   });
 }

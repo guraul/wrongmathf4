@@ -1,6 +1,6 @@
 # INDEX.md — 项目知识库索引总览
 
-> 最后更新: 2026-11-20 | commit: `a432666858ac8fe9f3e3477935a5b935a6f5db88`
+> 最后更新: 2026-11-21 | commit: `01d748b`
 > 覆盖路径: `package.json`, `pnpm-workspace.yaml`, `.dsh/pipeline.json`, `packages/core/src/index.ts`, `packages/core/src/ingest/pixels.ts`, `packages/core/src/judge/verdict.ts`, `packages/core/src/render/html.ts`, `packages/core/src/render/figures.ts`, `packages/core/src/vlm/client.ts`, `packages/web/app/page.tsx`
 
 ## 使用说明

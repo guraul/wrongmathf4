@@ -9,6 +9,8 @@ export interface BuildInput {
   solver: Map<string, string>;
   /** 红笔掩膜聚出来的簇数 */
   foundClusters: number;
+  /** 框里真的压着红笔的标记数（0 = 红笔机制不可信，如黑笔批改） */
+  redVerifiedMarks?: number;
 }
 
 export interface BuildResult {
@@ -63,7 +65,13 @@ export function buildQuestions(input: BuildInput): BuildResult {
 
   const questions = input.page.questions.map((q, i) => {
     const solverAnswer = input.solver.get(q.originalNo) ?? null;
-    const built = toQuestion(q, i + 1, solverAnswer, input.foundClusters > 0);
+    // 求解漏批兜底只在「红笔机制可信」时启用。两个信号满足其一：
+    // 1. 有标记框真的压着红笔簇（最可靠，但模型给的框常常偏）；
+    // 2. 整页红簇数不少于声称的标记数——红笔卷真机实测 7 簇 / 2 个标记，
+    //    黑笔卷是 0 簇 / 6 个标记；红章页眉只会带进零星几簇，够不到这个比例。
+    const canPromoteBySolver =
+      (input.redVerifiedMarks ?? 0) > 0 || (input.foundClusters > 0 && input.foundClusters >= claimedMarks);
+    const built = toQuestion(q, i + 1, solverAnswer, canPromoteBySolver);
 
     if (built.verdict === "unknown") return built;
 

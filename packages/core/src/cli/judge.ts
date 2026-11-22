@@ -11,6 +11,7 @@ import { prepareForModel } from "../ingest/io.js";
 import { loadImage } from "../ingest/io.js";
 import { redMask } from "../ingest/pixels.js";
 import { clusterMask } from "../judge/cluster.js";
+import { countRedVerifiedMarks } from "../judge/ink.js";
 import { transcribeWithConsensus } from "../judge/consensus.js";
 import { buildQuestions, wrongQuestions } from "../judge/pipeline.js";
 import { RawPage } from "../vlm/parse.js";
@@ -24,10 +25,10 @@ function usage(reason?: string): never {
   process.exit(2);
 }
 
-async function clusterCount(maskPath: string): Promise<number> {
+async function redClusters(maskPath: string) {
   const img = await loadImage(maskPath);
   const { mask } = redMask(img);
-  return clusterMask(mask, img.width, img.height).length;
+  return { clusters: clusterMask(mask, img.width, img.height), img };
 }
 
 let parsed;
@@ -74,8 +75,11 @@ if (parsed.replay !== undefined) {
   page = consensus.page;
   const solver = await client.solve(page.questions);
 
-  const foundClusters = maskPath ? await clusterCount(maskPath) : 0;
-  const { questions, claimedMarks } = buildQuestions({ page, solver, foundClusters });
+  const red = maskPath ? await redClusters(maskPath) : null;
+  const foundClusters = red?.clusters.length ?? 0;
+  const redVerifiedMarks =
+    red === null ? 0 : countRedVerifiedMarks(page, red.clusters, red.img.width, red.img.height);
+  const { questions, claimedMarks } = buildQuestions({ page, solver, foundClusters, redVerifiedMarks });
 
   console.log(
     JSON.stringify(
@@ -84,6 +88,7 @@ if (parsed.replay !== undefined) {
         image: { width: prepared.width, height: prepared.height },
         claimedMarks,
         foundClusters,
+        redVerifiedMarks,
         total: questions.length,
         wrong: wrongQuestions(questions).map((q) => ({
           originalNo: q.originalNo,
@@ -101,8 +106,16 @@ if (parsed.replay !== undefined) {
 }
 
 // replay 分支：没有学生作答以外的外部输入，簇数按 --mask 给，缺省 0（不做对账）
-const foundClusters = maskPath ? await clusterCount(maskPath) : 0;
-const { questions, claimedMarks } = buildQuestions({ page, solver: new Map(), foundClusters });
+const red = maskPath ? await redClusters(maskPath) : null;
+const foundClusters = red?.clusters.length ?? 0;
+const redVerifiedMarks =
+  red === null ? 0 : countRedVerifiedMarks(page, red.clusters, red.img.width, red.img.height);
+const { questions, claimedMarks } = buildQuestions({
+  page,
+  solver: new Map(),
+  foundClusters,
+  redVerifiedMarks,
+});
 
 console.log(
   JSON.stringify(
@@ -110,6 +123,7 @@ console.log(
       source,
       claimedMarks,
       foundClusters,
+      redVerifiedMarks,
       total: questions.length,
       verdicts: questions.map((q) => ({
         originalNo: q.originalNo,

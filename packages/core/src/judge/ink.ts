@@ -1,4 +1,5 @@
 import type { RgbaImage } from "../ingest/pixels.js";
+import type { Cluster } from "./cluster.js";
 import type { RawPage } from "../vlm/parse.js";
 
 /**
@@ -81,6 +82,39 @@ export const MIN_RED_RATIO = 0.003;
 
 /** 低于这个暗像素占比就当框里没有墨迹（仅用于提示） */
 export const MIN_DARK_RATIO = 0.01;
+
+/**
+ * 有多少个「判错/判对」的标记，其框里真的压着红笔簇。
+ *
+ * 用来决定「求解漏批兜底」能不能开：整页只要有红色印刷元素（红章、页眉）就会被
+ * 「整页有没有红簇」误导，改成只看标记框内的红笔更稳；整页都是黑笔时自然为 0。
+ */
+export function countRedVerifiedMarks(
+  page: RawPage,
+  clusters: Cluster[],
+  width: number,
+  height: number,
+): number {
+  let verified = 0;
+
+  for (const q of page.questions) {
+    if (q.teacherMark !== "wrong" && q.teacherMark !== "right") continue;
+    if (q.markBox === null) continue;
+
+    const [x, y, w, h] = q.markBox;
+    const bx0 = x * width;
+    const by0 = y * height;
+    const bx1 = (x + w) * width;
+    const by1 = (y + h) * height;
+
+    const hit = clusters.some(
+      (c) => c.x < bx1 && c.x + c.w > bx0 && c.y < by1 && c.y + c.h > by0,
+    );
+    if (hit) verified += 1;
+  }
+
+  return verified;
+}
 
 export interface MarkInkReport {
   /** 有标记、但框里既没红笔也没暗墨的题号 */

@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   dedupePage,
+  dedupeResolved,
   hasDisagreement,
   markKey,
   mergeRuns,
   transcribeWithConsensus,
   voteMarks,
 } from "../src/judge/consensus.js";
+import type { ResolvedQuestion } from "../src/judge/consensus.js";
 import type { RawPage } from "../src/vlm/parse.js";
 
 function page(entries: Array<[string, "right" | "wrong" | "none", string?]>): RawPage {
@@ -125,6 +127,49 @@ describe("多轮合并", () => {
 
   it("空输入直接报错", () => {
     expect(() => mergeRuns([])).toThrow();
+  });
+});
+
+describe("去重合并", () => {
+  const q = (no: string, mark: "right" | "wrong" | "none", stem: string) =>
+    page([[no, mark, stem]]).questions[0] as ResolvedQuestion;
+
+  it("重复抄法不会把已收敛的「错」翻成「没批」", () => {
+    const questions = [
+      q("一（1）", "wrong", "求组合图形的面积。（单位：cm）"),
+      q("第3天一（1）", "none", "二、求组合图形的面积。（单位：cm）"),
+    ];
+    const { questions: out } = dedupeResolved(questions, [
+      { mark: "wrong", votes: ["wrong", "none"] },
+      { mark: "none", votes: ["none"] },
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0]?.teacherMark).toBe("wrong");
+  });
+
+  it("已收敛的是 none 时，采纳重复项的标记", () => {
+    const questions = [
+      q("一（1）", "none", "求组合图形的面积。（单位：cm）"),
+      q("第3天一（1）", "wrong", "二、求组合图形的面积。（单位：cm）"),
+    ];
+    const { questions: out } = dedupeResolved(questions, [
+      { mark: "none", votes: ["none"] },
+      { mark: "wrong", votes: ["wrong"] },
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0]?.teacherMark).toBe("wrong");
+  });
+
+  it("题号不兼容的同题干不合并", () => {
+    const questions = [
+      q("一（1）", "wrong", "求组合图形的面积。（单位：cm）"),
+      q("一（2）", "none", "求组合图形的面积。（单位：cm）"),
+    ];
+    const { questions: out } = dedupeResolved(questions, [
+      { mark: "wrong", votes: ["wrong"] },
+      { mark: "none", votes: ["none"] },
+    ]);
+    expect(out).toHaveLength(2);
   });
 });
 
