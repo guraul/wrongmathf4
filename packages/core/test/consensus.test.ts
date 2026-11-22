@@ -160,6 +160,34 @@ describe("去重合并", () => {
     expect(out[0]?.teacherMark).toBe("wrong");
   });
 
+  it("同一题的重复项里出现两种不同标记 → 判 none，不猜", () => {
+    const questions = [
+      q("一（1）", "wrong", "求组合图形的面积。（单位：cm）"),
+      q("第3天一（1）", "right", "二、求组合图形的面积。（单位：cm）"),
+      q("第4天一（1）", "wrong", "三、求组合图形的面积。（单位：cm）"),
+    ];
+    const { questions: out } = dedupeResolved(questions, [
+      { mark: "wrong", votes: ["wrong"] },
+      { mark: "right", votes: ["right"] },
+      { mark: "wrong", votes: ["wrong"] },
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0]?.teacherMark).toBe("none");
+  });
+
+  it("合并后的票是干净单票，不会制造假分歧", () => {
+    const questions = [
+      q("一（1）", "none", "求组合图形的面积。（单位：cm）"),
+      q("第3天一（1）", "wrong", "二、求组合图形的面积。（单位：cm）"),
+    ];
+    const { votes } = dedupeResolved(questions, [
+      { mark: "none", votes: ["none"] },
+      { mark: "wrong", votes: ["wrong"] },
+    ]);
+    expect(votes).toHaveLength(1);
+    expect(new Set(votes[0]?.votes).size).toBe(1);
+  });
+
   it("题号不兼容的同题干不合并", () => {
     const questions = [
       q("一（1）", "wrong", "求组合图形的面积。（单位：cm）"),

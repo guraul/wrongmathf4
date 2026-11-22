@@ -69,8 +69,12 @@ export function buildQuestions(input: BuildInput): BuildResult {
     // 1. 有标记框真的压着红笔簇（最可靠，但模型给的框常常偏）；
     // 2. 整页红簇数不少于声称的标记数——红笔卷真机实测 7 簇 / 2 个标记，
     //    黑笔卷是 0 簇 / 6 个标记；红章页眉只会带进零星几簇，够不到这个比例。
+    // 一个标记都没声称时直接关闸：否则 foundClusters >= claimedMarks(0) 恒真，
+    // 黑笔卷上只要有零星红印就会让求解兜底把整页判错。
     const canPromoteBySolver =
-      (input.redVerifiedMarks ?? 0) > 0 || (input.foundClusters > 0 && input.foundClusters >= claimedMarks);
+      claimedMarks > 0 &&
+      ((input.redVerifiedMarks ?? 0) > 0 ||
+        (input.foundClusters > 0 && input.foundClusters >= claimedMarks));
     const built = toQuestion(q, i + 1, solverAnswer, canPromoteBySolver);
 
     if (built.verdict === "unknown") return built;
